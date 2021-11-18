@@ -1,3 +1,6 @@
+<?php
+    session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,6 +25,26 @@
             width: 30px;
         }
     </style>
+    <script type="text/javascript">
+        // $(document).ready(function () {
+        //     createCookie("height", $(window).height(), "1");
+        //     });
+        // function createCookie(name, value, days) {
+        //     document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/";
+        // }
+    //    function myAjax(value_myfunction) {
+    //         console.log(value_myfunction);
+    //         var xmlhttp = new XMLHttpRequest();
+    //         xmlhttp.onreadystatechange = function() {
+    //         if (this.readyState == 4 && this.status == 200) {
+    //             document.getElementById("results").innerHTML += this.responseText; 
+    //             // note '+=', adds result to the existing paragraph, remove the '+' to replace.
+    //         }
+    //         };
+    //         console.log(window.location + "?sendValue=" + value_myfunction);
+    //         xmlhttp.open("GET", window.location + "?sendValue=" + value_myfunction, true);
+    //     }   
+    </script>
 </head>
 <body>
     <h1>List of products</h1>
@@ -34,12 +57,13 @@
             <th>Add to cart</th>
         </tr>
         <?php
-            include 'config.php';
+            include 'config2.php';
             $conn = require 'common.php';
             $stmt = $conn->prepare("SELECT id, title, description, price FROM products;");
             $stmt->execute();
 
             $products = $stmt->fetchALL(PDO::FETCH_CLASS);
+            $_SESSION['productsInCart'] = [];
         ?>
         <?php foreach($products as $product): ?>
             <tr> 
@@ -56,14 +80,18 @@
                     <?php echo $product->price;?>
                 </td>
                 <td>
-                    <a href="#">Add</a>
+                    <a href="#" onclick="myAjax(<?php echo $product->id; ?>)">Add</a>
                 </td>
             </tr>
         <?php endforeach; ?>
     </table>
+    <p id="results"></p>
     <br>
     <div style="text-align: center;">
         <a  href="cart.php">Go to cart</a>
     </div>
+    <?php 
+       echo $_COOKIE["height"];
+    ?>
 </body>
 </html>

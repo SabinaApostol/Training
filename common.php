@@ -1,6 +1,5 @@
 <?php
 
-
 function translate($data) {
     return $data;
 }
