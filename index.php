@@ -17,29 +17,42 @@
             margin-left: auto;
             margin-right: auto;
         }
+        img {
+            height: 30px;
+            width: 30px;
+        }
     </style>
 </head>
 <body>
     <h1>List of products</h1>
     <table class="center">
         <tr>
+            <th></th>
             <th>Title</th>
             <th>Description</th>
             <th>Price</th>
+            <th>Add to cart</th>
         </tr>
         <?php
-        $servername = "localhost";
-        $username = "root";
-        $password = "";
-        $dbname = "training";
-        $conn = new PDO("mysql:host={$servername};dbname={$dbname}", $username, $password);
-        $stmt = $conn->prepare("SELECT title, description, price FROM products;");
-        $stmt->execute();
+            include 'config.php';
+           
+            $servername =  DATABASE['servername'];
+            $username =  DATABASE['username'];
+            $password =  DATABASE['password'];
+            $dbname =  DATABASE['dbname'];
 
-        $products = $stmt->fetchALL(PDO::FETCH_CLASS);
+
+            $conn = new PDO("mysql:host=$servername;dbname={$dbname}", $username, $password);
+            $stmt = $conn->prepare("SELECT id, title, description, price FROM products;");
+            $stmt->execute();
+
+            $products = $stmt->fetchALL(PDO::FETCH_CLASS);
         ?>
         <?php foreach($products as $product): ?>
-            <tr>
+            <tr> 
+                <td>
+                    <img src='./book.jpg'/> 
+                </td>
                 <td>
                     <?php echo $product->title;?>
                 </td>
@@ -49,8 +62,15 @@
                 <td>
                     <?php echo $product->price;?>
                 </td>
+                <td>
+                    <a href="#">Add</a>
+                </td>
             </tr>
         <?php endforeach; ?>
     </table>
+    <br>
+    <div style="text-align: center;">
+        <a  href="cart.php">Go to cart</a>
+    </div>
 </body>
 </html>
