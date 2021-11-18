@@ -32,4 +32,4 @@
             echo 'Wrong file type!';
         }
     }
-    ?>
+?>

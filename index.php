@@ -35,14 +35,7 @@
         </tr>
         <?php
             include 'config.php';
-           
-            $servername =  DATABASE['servername'];
-            $username =  DATABASE['username'];
-            $password =  DATABASE['password'];
-            $dbname =  DATABASE['dbname'];
-
-
-            $conn = new PDO("mysql:host=$servername;dbname={$dbname}", $username, $password);
+            $conn = require 'common.php';
             $stmt = $conn->prepare("SELECT id, title, description, price FROM products;");
             $stmt->execute();
 
