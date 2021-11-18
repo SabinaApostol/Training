@@ -1,8 +1,1 @@
-<?php
-
-define('DATABASE', [
-    'servername' => 'localhost',
-    'username' => 'root',
-    'password' => '',
-    'dbname' => 'training'
-]);
+config2.php
