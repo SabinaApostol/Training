@@ -37,7 +37,7 @@
             <th>Add to cart</th>
         </tr>
         <?php
-            include 'config2.php';
+            include 'config.php';
            
             $conn = require 'common.php';
             $stmt = $conn->prepare("SELECT id, title, description, price FROM products;");
