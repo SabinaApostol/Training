@@ -37,15 +37,14 @@
             <th>Remove from cart</th>
         </tr>
         <?php
-            include 'config.php';
+            include 'config2.php';
             $conn = require 'common.php';
             $stmt = $conn->prepare("SELECT id, title, description, price FROM products;");
             $stmt->execute();
 
             $products = $stmt->fetchALL(PDO::FETCH_CLASS);
-            var_dump($_SESSION)
         ?>
-        <?php foreach($_SESSION['productsInCart'] as $product): ?>
+        <?php foreach($products as $product): ?>
             <tr> 
                 <td>
                     <img src='./book.jpg'/> 
@@ -60,7 +59,7 @@
                     <?php echo $product->price;?>
                 </td>
                 <td>
-                    <a href="<?php removeFromCart($product); ?>">Remove</a>
+                    <a href="#">Remove</a>
                 </td>
             </tr>
         <?php endforeach; ?>
@@ -69,9 +68,5 @@
     <div style="text-align: center;">
         <a  href="index.php">Go to index</a>
     </div>
-    <?php
-        function removeFromCart($product) {// var_dump($product);
-        }
-    ?>
 </body>
 </html>

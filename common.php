@@ -10,6 +10,9 @@ $username =  DATABASE['username'];
 $password =  DATABASE['password'];
 $dbname =  DATABASE['dbname'];
 
-$conn = new PDO("mysql:host=$servername;dbname={$dbname}", $username, $password);
-
-return $conn;
+try {
+    return $conn = new PDO("mysql:host={$servername};dbname={$dbname}", $username, $password);
+}
+catch (PDOException $e) {
+    die($e->getMessage());
+}
