@@ -1,5 +1,6 @@
 <?php
 require_once 'common.php';
+
 if (isset($_GET['id'])) {
     if (($key = array_search($_GET['id'], $_SESSION['ids'])) !== false) {
         unset($_SESSION['ids'][$key]);
@@ -12,12 +13,15 @@ $stmt->execute();
 
 $allProducts = $stmt->fetchALL(PDO::FETCH_CLASS);
 $products = array();
-foreach($allProducts as $product) {
+foreach ($allProducts as $product) {
     if (in_array($product->id, $_SESSION['ids'])) {
         $products[] = $product;
     }
 }
 
+foreach ($products as $product) {
+    $product->img = '<img src=\'./book.jpg\'/>';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -54,19 +58,19 @@ foreach($allProducts as $product) {
             <th>Price</th>
             <th>Remove from cart</th>
         </tr>
-        <?php foreach($products as $product): ?>
+        <?php foreach ($products as $product): ?>
             <tr> 
                 <td>
-                    <img src='./book.jpg'/> 
+                    <?= $product->img;?>
                 </td>
                 <td>
-                    <?php echo $product->title;?>
+                    <?= $product->title;?>
                 </td>
                 <td>
-                    <?php echo $product->description;?>
+                    <?= $product->description;?>
                 </td>
                 <td>
-                    <?php echo $product->price;?>
+                    <?= $product->price;?>
                 </td>
                 <td>
                     <a href=<?= "cart.php?id=" . $product->id;?>>Remove</a>

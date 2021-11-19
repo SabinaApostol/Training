@@ -12,11 +12,8 @@ if (isset($_GET['id']))
 $stmt = $conn->prepare('SELECT * FROM products;');
 $stmt->execute();
 $products = $stmt->fetchALL(PDO::FETCH_CLASS);
-$checked = [];
-
-foreach($products as $product) 
-{
-    $checked[$product->id] = false;
+foreach ($products as $product) {
+    $product->img = '<img src=\'./book.jpg\'/>';
 }
 ?>
 <!DOCTYPE html>
@@ -58,7 +55,7 @@ foreach($products as $product)
             <?php if (! in_array($product->id, $_SESSION['ids'])) : ?> 
                 <tr> 
                     <td>
-                        <img src='./book.jpg'/> 
+                        <?= $product->img;?>
                     </td>
                     <td>
                         <?= $product->title;?>
