@@ -44,7 +44,6 @@
             $stmt->execute();
 
             $products = $stmt->fetchALL(PDO::FETCH_CLASS);
-            $_SESSION['productsInCart'] = [];
         ?>
         <?php foreach($products as $product): ?>
             <tr> 
