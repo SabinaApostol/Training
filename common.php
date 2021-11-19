@@ -1,9 +1,16 @@
 <?php
+session_start();
 
-function translate($data) {
-    return $data;
+require_once 'config.php';
+
+if (! isset($_SESSION['ids'])) {
+    $_SESSION['ids'] = array();
 }
 
+function translate($data) 
+{
+    return $data;
+}
 
 $servername =  DATABASE['servername'];
 $username =  DATABASE['username'];
@@ -11,8 +18,7 @@ $password =  DATABASE['password'];
 $dbname =  DATABASE['dbname'];
 
 try {
-    return $conn = new PDO("mysql:host={$servername};dbname={$dbname}", $username, $password);
-}
-catch (PDOException $e) {
+    $conn = new PDO("mysql:host={$servername};dbname={$dbname}", $username, $password);
+} catch (PDOException $e) {
     die($e->getMessage());
 }
