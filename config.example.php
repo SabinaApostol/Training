@@ -8,3 +8,7 @@ define('DATABASE', [
 ]);
 
 define('SMEMAIL', '********@gmail.com');
+
+define('ADMINUSERNAME', '*********');
+
+define('ADMINPASSWORD', '*********');

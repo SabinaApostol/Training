@@ -2,22 +2,22 @@
 
 require_once 'common.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $_SESSION['ids'][] = $_POST['id'];
-    $_SESSION['ids'] = array_unique($_SESSION['ids']);
-    header('Location: index.php');
-    exit;
-}
+$stmt = $conn->prepare('SELECT * FROM products');
+$stmt->execute();
+$products = $stmt->fetchALL(PDO::FETCH_CLASS);
 
-if (empty($_SESSION['ids'])) {
-    $stmt = $conn->prepare('SELECT * FROM products');
-    $stmt->execute();
-    $products = $stmt->fetchALL(PDO::FETCH_CLASS);
-} else {
-    $idValues = implode(', ', $_SESSION['ids']);
-    $stmt = $conn->prepare('SELECT * FROM products WHERE id NOT IN(' . $idValues . ')');
-    $stmt->execute();
-    $products = $stmt->fetchALL(PDO::FETCH_CLASS);  
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (! empty($_POST['idDelete'])) {
+        $stmt = $conn->prepare('DELETE FROM products WHERE id = ?');
+        $stmt->bindValue(1, $_POST['idDelete'], PDO::PARAM_INT);
+        $stmt->execute();
+        header('Location: products.php');
+        exit;
+    }
+    if (! empty($_POST['idEdit'])) {
+        header('Location: product.php');
+        exit;
+    }
 }
 
 ?>
@@ -27,7 +27,7 @@ if (empty($_SESSION['ids'])) {
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= translate('Document') ?></title>
+    <title><?= translate('Document')?></title>
     <style>
         h1 {
             text-align: center;
@@ -48,14 +48,15 @@ if (empty($_SESSION['ids'])) {
     </style>
 </head>
 <body>
-    <h1><?= translate('List of products') ?></h1>
+<h1><?= translate('List of products') ?></h1>
     <table class="center">
         <tr>
             <th></th>
             <th><?= translate('Title') ?></th>
             <th><?= translate('Description') ?></th>
             <th><?= translate('Price') ?></th>
-            <th><?= translate('Add to cart') ?></th>
+            <th><?= translate('Edit product') ?></th>
+            <th><?= translate('Delete product') ?></th>
         </tr>
         <?php foreach ($products as $product) : ?>
             <tr> 
@@ -72,9 +73,15 @@ if (empty($_SESSION['ids'])) {
                     <?= $product->price ?>
                 </td>
                 <td>
-                    <form action="index.php" method="post">
-                        <input name="id" value="<?= $product->id ?>" type="hidden">
-                        <input type="submit" value="Add">
+                    <form action="product.php" method="post">
+                        <input name="idEdit" value="<?= $product->id ?>" type="hidden">
+                        <input type="submit" value="Edit">
+                    </form> 
+                </td>
+                <td>
+                    <form action="products.php" method="post">
+                        <input name="idDelete" value="<?= $product->id ?>" type="hidden">
+                        <input type="submit" value="Delete">
                     </form> 
                 </td>
             </tr>
@@ -82,8 +89,8 @@ if (empty($_SESSION['ids'])) {
     </table>
     <br>
     <div style="text-align: center;">
-        <a  href="cart.php"><?= translate('Go to cart') ?></a>
+        <a  href="product.php"><?= translate('Add') ?></a>
+        <a  href="login.php"><?= translate('Logout') ?></a>
     </div>
-    <br>
 </body>
 </html>

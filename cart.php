@@ -2,12 +2,12 @@
 
 require_once 'common.php';
 
-$err = "";
-$name = $contact = $comment = "";
+$err = '';
+$name = $contact = $comment = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    if (! empty($_POST["id"]) && ($key = array_search($_POST['id'], $_SESSION['ids'])) !== false) {
+    if (! empty($_POST['id']) && ($key = array_search($_POST['id'], $_SESSION['ids'])) !== false) {
         unset($_SESSION['ids'][$key]);
         header('Location: cart.php');
         exit;
