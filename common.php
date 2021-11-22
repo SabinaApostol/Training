@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 
 require_once 'config.php';
@@ -16,6 +17,8 @@ $servername =  DATABASE['servername'];
 $username =  DATABASE['username'];
 $password =  DATABASE['password'];
 $dbname =  DATABASE['dbname'];
+
+$smEmail = SMEMAIL;
 
 try {
     $conn = new PDO("mysql:host={$servername};dbname={$dbname}", $username, $password);

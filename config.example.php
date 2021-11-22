@@ -6,3 +6,5 @@ define('DATABASE', [
     'password' => '******',
     'dbname' => '******'
 ]);
+
+define('SMEMAIL', '********@gmail.com');

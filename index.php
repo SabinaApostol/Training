@@ -1,20 +1,25 @@
 <?php
+
 require_once 'common.php';
 
-if (isset($_GET['id']))
-{
-    $_SESSION['ids'][] = $_GET['id'];
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $_SESSION['ids'][] = $_POST['id'];
     $_SESSION['ids'] = array_unique($_SESSION['ids']);
-    echo var_dump($_SESSION);
-    Header('Location: '.$_SERVER['PHP_SELF']);
+    header('Location: index.php');
+    exit;
 }
 
-$stmt = $conn->prepare('SELECT * FROM products;');
-$stmt->execute();
-$products = $stmt->fetchALL(PDO::FETCH_CLASS);
-foreach ($products as $product) {
-    $product->img = '<img src=\'./book.jpg\'/>';
+if (empty($_SESSION['ids'])) {
+    $stmt = $conn->prepare('SELECT * FROM products');
+    $stmt->execute();
+    $products = $stmt->fetchALL(PDO::FETCH_CLASS);
+} else {
+    $idValues = implode(', ', $_SESSION['ids']);
+    $stmt = $conn->prepare('SELECT * FROM products WHERE id NOT IN(' . $idValues . ')');
+    $stmt->execute();
+    $products = $stmt->fetchALL(PDO::FETCH_CLASS);
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -22,7 +27,7 @@ foreach ($products as $product) {
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= translate('Document')?></title>
+    <title><?= translate('Document') ?></title>
     <style>
         h1 {
             text-align: center;
@@ -30,8 +35,9 @@ foreach ($products as $product) {
         }
         table, th, td {
             border: 1px solid #000000;
+            text-align: center;
         }
-        .center {
+        .center{
             margin-left: auto;
             margin-right: auto;
         }
@@ -42,32 +48,35 @@ foreach ($products as $product) {
     </style>
 </head>
 <body>
-    <h1><?= translate('List of products')?></h1>
+    <h1><?= translate('List of products') ?></h1>
     <table class="center">
         <tr>
             <th></th>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Price</th>
-            <th>Add to cart</th>
+            <th><?= translate('Title') ?></th>
+            <th><?= translate('Description') ?></th>
+            <th><?= translate('Price') ?></th>
+            <th><?= translate('Add to cart') ?></th>
         </tr>
         <?php foreach ($products as $product) : ?>
             <?php if (! in_array($product->id, $_SESSION['ids'])) : ?> 
                 <tr> 
                     <td>
-                        <?= $product->img;?>
+                        <img src="<?= $product->img ?>">
                     </td>
                     <td>
-                        <?= $product->title;?>
+                        <?= $product->title ?>
                     </td>
                     <td>
-                        <?= $product->description;?>
+                        <?= $product->description ?>
                     </td>
                     <td>
-                        <?= $product->price;?>
+                        <?= $product->price ?>
                     </td>
                     <td>
-                        <a href=<?= "index.php?id=" . $product->id;?> >Add</a>
+                        <form action="index.php" method="post">
+                            <input name="id" value="<?= $product->id ?>" type="hidden">
+                            <input type="submit" value="Add">
+                        </form> 
                     </td>
                 </tr>
             <?php endif; ?>
@@ -75,7 +84,7 @@ foreach ($products as $product) {
     </table>
     <br>
     <div style="text-align: center;">
-        <a  href="cart.php">Go to cart</a>
+        <a  href="cart.php"><?= translate('Go to cart') ?></a>
     </div>
     <br>
 </body>

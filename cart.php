@@ -1,27 +1,82 @@
 <?php
+
 require_once 'common.php';
 
-if (isset($_GET['id'])) {
-    if (($key = array_search($_GET['id'], $_SESSION['ids'])) !== false) {
+$err = "";
+$name = $contact = $comment = "";
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+
+    if (! empty($_POST["id"]) && ($key = array_search($_POST['id'], $_SESSION['ids'])) !== false) {
         unset($_SESSION['ids'][$key]);
+        header('Location: cart.php');
+        exit;
     }
-    echo var_dump($_SESSION);
-    Header('Location: '.$_SERVER['PHP_SELF']);
-}
-$stmt = $conn->prepare('SELECT * FROM products;');
-$stmt->execute();
 
-$allProducts = $stmt->fetchALL(PDO::FETCH_CLASS);
-$products = array();
-foreach ($allProducts as $product) {
-    if (in_array($product->id, $_SESSION['ids'])) {
-        $products[] = $product;
-    }
+    if (empty($_POST['email']) || empty($_POST['name'])) {
+        $err = 'Complete all required fields!';
+    } else {
+        $name = test_input($_POST["name"]);
+        $email = test_input($_POST["email"]);
+
+        if (empty($_POST['comment'])) {
+            $comment = '';
+          } else {
+            $comment = test_input($_POST['comment']);
+          }
+
+        if (! preg_match("/^[a-zA-Z-' ]*$/", $name) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+          $err = 'Please correctly complete the required fields!';
+        } elseif (! empty($_SESSION['ids'])) {
+            $idValues = implode(', ', $_SESSION['ids']);
+            $stmt = $conn->prepare('SELECT * FROM products WHERE id IN(' . $idValues . ')');
+            $stmt->execute();
+            $products = $stmt->fetchALL(PDO::FETCH_CLASS);
+            $to = SMEMAIL;
+
+            $subject = 'New order';
+
+            $header ='From: '. $email . "\r\n" .
+            'Reply-To: ' . $email . "\r\n";
+        
+            $message = $name . ' wtih the email ' . $email . ' wants the following products: ' . "\r\n";
+            foreach ($products as $product) {
+                $message .= $product->img . ' - ' .$product->id . ' - ' . $product->title;
+                $message .=' - ' . $product->description . ' - ' . $product->price . "\r\n";
+            }
+
+            if ($comment !== '') {
+                $message .= 'Comments: ' . $comment . "\r\n";
+            }
+
+            $retval = mail($to, $subject, $message, $header);
+            if( $retval == true ) {
+                unset($_SESSION['ids']);
+                header('Location: index.php');
+                exit;
+            } else {
+                echo 'Checkout failed...';
+            }
+        }
+      }
 }
 
-foreach ($products as $product) {
-    $product->img = '<img src=\'./book.jpg\'/>';
+function test_input($data) {
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
 }
+
+if (! empty($_SESSION['ids'])) {
+    $idValues = implode(', ', $_SESSION['ids']);
+    $stmt = $conn->prepare('SELECT * FROM products WHERE id IN(' . $idValues . ')');
+    $stmt->execute();
+    $products = $stmt->fetchALL(PDO::FETCH_CLASS);
+} else {
+    $products = [];
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -37,6 +92,7 @@ foreach ($products as $product) {
         }
         table, th, td {
             border: 1px solid #000000;
+            text-align: center;
         }
         .center {
             margin-left: auto;
@@ -46,22 +102,28 @@ foreach ($products as $product) {
             height: 30px;
             width: 30px;
         }
+        .error {
+            color: #FF0000;
+        }
+        .mywidth {
+            width: 300px;   
+        }
     </style>
 </head>
 <body>
-    <h1><?= translate('Your cart')?></h1>
+    <h1><?= translate('Your cart') ?></h1>
     <table class="center">
         <tr>
             <th></th>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Price</th>
-            <th>Remove from cart</th>
+            <th><?= translate('Title') ?></th>
+            <th><?= translate('Description') ?></th>
+            <th><?= translate('Price') ?></th>
+            <th><?= translate('Remove from cart') ?></th>
         </tr>
         <?php foreach ($products as $product): ?>
             <tr> 
                 <td>
-                    <?= $product->img;?>
+                    <img src="<?= $product->img ?>">
                 </td>
                 <td>
                     <?= $product->title;?>
@@ -73,14 +135,31 @@ foreach ($products as $product) {
                     <?= $product->price;?>
                 </td>
                 <td>
-                    <a href=<?= "cart.php?id=" . $product->id;?>>Remove</a>
+                    <form action="cart.php" method="post">
+                        <input name="id" value="<?= $product->id ?>" type="hidden">
+                        <input type="submit" value="Remove">
+                    </form> 
                 </td>
             </tr>
         <?php endforeach; ?>
     </table>
-    <br>
-    <div style="text-align: center;">
-        <a  href="index.php">Go to index</a>
+    <br><br>
+    <div >
+    <form style="text-align: center;" method="post" action="cart.php">  
+        <input type="text" name="name" placeholder="<?= translate('Name') ?>" class="mywidth">
+        <span class="error">*</span>
+        <br>
+        <input type="text" name="email" placeholder="<?= translate('Contact details') ?>" class="mywidth">
+        <span class="error">*</span>
+        <br>
+        <textarea name="comment" cols="40" rows="10" placeholder="<?= translate('Comments') ?>"></textarea>
+        <br>
+        <div style="text-align: center;">
+            <a  href="index.php"><?= translate('Go to index') ?></a>
+            <input type="submit" name="submit" value="Checkout"> 
+        </div>
+        <span class="error"><?php echo $err;?></span>
+    </form>
     </div>
 </body>
 </html>
