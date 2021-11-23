@@ -5,6 +5,16 @@ require_once 'common.php';
 $err = '';
 $name = $contact = $comment = '';
 
+if (! empty($_SESSION['ids'])) {
+    $idValues = createArrayToBind($_SESSION['ids']);
+    $stmt = $conn->prepare('SELECT * FROM products WHERE id IN(' . $idValues . ')');
+    $stmt = bindArrayValues($_SESSION['ids'], $stmt);
+    $products = execAndFetch($stmt);
+
+} else {
+    $products = [];
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if (! empty($_POST['id']) && ($key = array_search($_POST['id'], $_SESSION['ids'])) !== false) {
@@ -28,16 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (! preg_match("/^[a-zA-Z-' ]*$/", $name) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
           $err = 'Please correctly complete the required fields!';
         } elseif (! empty($_SESSION['ids'])) {
-            $idValues = implode(', ', $_SESSION['ids']);
-            $stmt = $conn->prepare('SELECT * FROM products WHERE id IN(' . $idValues . ')');
-            $stmt->execute();
-            $products = $stmt->fetchALL(PDO::FETCH_CLASS);
             $to = SMEMAIL;
 
             $subject = 'New order';
 
-            $header ='From: '. $email . "\r\n" .
-            'Reply-To: ' . $email . "\r\n";
+            $header = 'From: '. $email . "\r\n" . 'Reply-To: ' . $email . "\r\n";
         
             $message = $name . ' wtih the email ' . $email . ' wants the following products: ' . "\r\n";
             foreach ($products as $product) {
@@ -50,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
 
             $retval = mail($to, $subject, $message, $header);
+            
             if( $retval == true ) {
                 unset($_SESSION['ids']);
                 header('Location: index.php');
@@ -66,15 +72,6 @@ function test_input($data) {
     $data = stripslashes($data);
     $data = htmlspecialchars($data);
     return $data;
-}
-
-if (! empty($_SESSION['ids'])) {
-    $idValues = implode(', ', $_SESSION['ids']);
-    $stmt = $conn->prepare('SELECT * FROM products WHERE id IN(' . $idValues . ')');
-    $stmt->execute();
-    $products = $stmt->fetchALL(PDO::FETCH_CLASS);
-} else {
-    $products = [];
 }
 
 ?>
@@ -126,18 +123,18 @@ if (! empty($_SESSION['ids'])) {
                     <img src="<?= $product->img ?>">
                 </td>
                 <td>
-                    <?= $product->title;?>
+                    <?= $product->title ?>
                 </td>
                 <td>
-                    <?= $product->description;?>
+                    <?= $product->description ?>
                 </td>
                 <td>
-                    <?= $product->price;?>
+                    <?= $product->price ?>
                 </td>
                 <td>
                     <form action="cart.php" method="post">
                         <input name="id" value="<?= $product->id ?>" type="hidden">
-                        <input type="submit" value="Remove">
+                        <button><?= translate('Remove') ?></button> 
                     </form> 
                 </td>
             </tr>
@@ -156,9 +153,9 @@ if (! empty($_SESSION['ids'])) {
         <br>
         <div style="text-align: center;">
             <a  href="index.php"><?= translate('Go to index') ?></a>
-            <input type="submit" name="submit" value="Checkout"> 
+            <button><?= translate('Checkout') ?></button> 
         </div>
-        <span class="error"><?php echo $err;?></span>
+        <span class="error"><?php echo $err ?></span>
     </form>
     </div>
 </body>

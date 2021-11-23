@@ -2,7 +2,7 @@
 
 require_once 'common.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $_SESSION['ids'][] = $_POST['id'];
     $_SESSION['ids'] = array_unique($_SESSION['ids']);
     header('Location: index.php');
@@ -10,14 +10,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 if (empty($_SESSION['ids'])) {
-    $stmt = $conn->prepare('SELECT * FROM products');
-    $stmt->execute();
-    $products = $stmt->fetchALL(PDO::FETCH_CLASS);
+    $products = prepareAndFetchAll($conn);
 } else {
-    $idValues = implode(', ', $_SESSION['ids']);
-    $stmt = $conn->prepare('SELECT * FROM products WHERE id NOT IN(' . $idValues . ')');
-    $stmt->execute();
-    $products = $stmt->fetchALL(PDO::FETCH_CLASS);  
+    $idValues = createArrayToBind($_SESSION['ids']);
+    $stmt = $conn->prepare('SELECT * FROM products WHERE id NOT IN( ' . $idValues .' )');
+    $stmt = bindArrayValues($_SESSION['ids'], $stmt);
+    $products = execAndFetch($stmt);
 }
 
 ?>
@@ -74,7 +72,7 @@ if (empty($_SESSION['ids'])) {
                 <td>
                     <form action="index.php" method="post">
                         <input name="id" value="<?= $product->id ?>" type="hidden">
-                        <input type="submit" value="Add">
+                        <button><?= translate('Add') ?></button>
                     </form> 
                 </td>
             </tr>
@@ -82,7 +80,7 @@ if (empty($_SESSION['ids'])) {
     </table>
     <br>
     <div style="text-align: center;">
-        <a  href="cart.php"><?= translate('Go to cart') ?></a>
+        <a href="cart.php"><?= translate('Go to cart') ?></a>
     </div>
     <br>
 </body>

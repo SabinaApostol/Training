@@ -2,9 +2,7 @@
 
 require_once 'common.php';
 
-$stmt = $conn->prepare('SELECT * FROM products');
-$stmt->execute();
-$products = $stmt->fetchALL(PDO::FETCH_CLASS);
+$products = prepareAndFetchAll($conn);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (! empty($_POST['idDelete'])) {
@@ -74,13 +72,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <td>
                     <form action="product.php" method="post">
                         <input name="idEdit" value="<?= $product->id ?>" type="hidden">
-                        <input type="submit" value="Edit">
+                        <button><?= translate('Edit') ?></button>
                     </form> 
                 </td>
                 <td>
                     <form action="products.php" method="post">
                         <input name="idDelete" value="<?= $product->id ?>" type="hidden">
-                        <input type="submit" value="Delete">
+                        <button><?= translate('Delete') ?></button>
                     </form> 
                 </td>
             </tr>

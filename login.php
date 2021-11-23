@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <input type="password" name="password" placeholder="<?= translate('Password') ?>">
         <span class="error">*</span>
         <br>
-        <input type="submit" name="submit" value="Login"> 
+        <button><?= translate('Login') ?></button>
         <br>
         <span class="error"><?php echo $err;?></span>
     </form>
