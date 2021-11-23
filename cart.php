@@ -41,21 +41,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $to = SMEMAIL;
 
             $subject = 'New order';
+            $header  = 'MIME-Version: 1.0' . "\r\n";
+            $header .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+            $header .= 'From: '. $email . "\r\n" . 'Reply-To: ' . $email . "\r\n" .  'X-Mailer: PHP/' . phpversion();;
 
-            $header = 'From: '. $email . "\r\n" . 'Reply-To: ' . $email . "\r\n";
-        
-            $message = $name . ' wtih the email ' . $email . ' wants the following products: ' . "\r\n";
+            $message = '<html><body>';
+            $message .= $name . ' wtih the email ' . $email . ' wants the following products: ' . "\r\n";
             foreach ($products as $product) {
-                $message .= $product->img . ' - ' .$product->id . ' - ' . $product->title;
+                $message .= '<img src="' . $product->img . '"> - ' .$product->id . ' - ' . $product->title;
                 $message .=' - ' . $product->description . ' - ' . $product->price . "\r\n";
             }
+            $message .= '</body></html>';
 
             if ($comment !== '') {
                 $message .= 'Comments: ' . $comment . "\r\n";
             }
 
             $retval = mail($to, $subject, $message, $header);
-            
+
             if( $retval == true ) {
                 unset($_SESSION['ids']);
                 header('Location: index.php');

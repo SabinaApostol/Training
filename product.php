@@ -2,44 +2,120 @@
 
 require_once 'common.php';
 
-$err = '';
+$err = $title = $description = $price = $img = '';
 
-if (!empty($_POST['idEdit'])) {
+if (! empty($_POST['idEdit'])) {
     $id = $_POST['idEdit'];
+} else {
+    $id = 0;
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (! empty($_POST['save']) && ! empty($_POST['title']) && ! empty($_POST['description']) && ! empty($_POST['price']) && ! empty($_POST['file'])) {
-        $file = $_FILES['file'];
-        $fileName = $_FILES['file']['name'];
-        $fileTmpName = $_FILES['file']['tmp_name'];
-        $fileSize = $_FILES['file']['size'];
-        $fileError = $_FILES['file']['error'];
-        $fileType = $_FILES['file']['type'];
+if ($id != 0) {
+    $stmt = $conn->prepare('SELECT title, description, price, img FROM products WHERE id = ?');
+    $stmt->bindValue(1, $_POST['idEdit']);
+    $stmt->execute();
+    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+    $title = $product['title'];
+    $description = $product['description'];
+    $price = $product['price'];
+    $img = $product['img'];
 
-        $fileExt = strtolower(end(explode('.', $fileName)));
-        $productName =  strtolower(explode('.', $fileName)[0]);
-        $allowed = array('jpg', 'jpeg', 'png');
+} elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if ($_POST['productId'] == 0) {
+        if ((is_uploaded_file($_FILES['file']['tmp_name'])) && (! empty($_POST['title'])) && (! empty($_POST['description'])) && (! empty($_POST['price']))) {
+            $file = $_FILES['file'];
+            $fileName = $_FILES['file']['name'];
+            $fileTmpName = $_FILES['file']['tmp_name'];
+            $fileSize = $_FILES['file']['size'];
+            $fileError = $_FILES['file']['error'];
+            $fileType = $_FILES['file']['type'];
 
-        if (in_array($fileExt, $allowed)) {
-            if ($fileError === 0) {
-                if ($fileSize < 900000) {
-                    $fileNameNew = $productName . "." . $fileExt;
-                    echo $fileNameNew;
-                    $fileDestination = 'uploads/' . $fileNameNew;
-                    move_uploaded_file($fileTmpName, $fileDestination);
-                    header("Location: index.php?upload succes{$fileNameNew}!");
+            $tmp = explode('.', $fileName);
+            $fileExt = strtolower(end($tmp));
+
+            $productName = strtolower(explode('.', $fileName)[0]);
+            $allowed = array('jpg', 'jpeg', 'png');
+
+            if (in_array($fileExt, $allowed)) {
+                if ($fileError === 0) {
+                    if ($fileSize < 9000000) {
+                        $fileNameNew = time() . '.' . $fileExt;
+                        $fileDestination = 'uploads/' . $fileNameNew;
+                        move_uploaded_file($fileTmpName, $fileDestination);
+
+                        $taValues = [
+                            'title' => $_POST['title'],
+                            'description' => $_POST['description'],
+                            'price' => $_POST['price'],
+                            'img' => $fileDestination
+                        ];
+                        $stmt = $conn->prepare('INSERT INTO products (title, description, price, img) VALUES (?, ?, ?, ?)');
+                        $stmt = bindArrayValues($taValues, $stmt);
+                        $stmt->execute();
+                        header('Location: products.php');
+                        exit;
+                    } else {
+                        $err = 'File is too big!';
+                    }
                 } else {
-                    $err = 'File is too big!';
+                    $err = 'There was an error uploading the file!';
                 }
             } else {
-                $err = 'There was an error uploading the file!';
+                $err = 'Wrong file type!';
             }
+        } elseif (empty($_POST['title']) || empty($_POST['description']) || empty($_POST['price']) ||  empty($_POST['file'])) {
+            $err = 'All fields are required!';
+        } 
+    } else {
+        if (is_uploaded_file($_FILES['file']['tmp_name'])) {
+                $file = $_FILES['file'];
+                $fileName = $_FILES['file']['name'];
+                $fileTmpName = $_FILES['file']['tmp_name'];
+                $fileSize = $_FILES['file']['size'];
+                $fileError = $_FILES['file']['error'];
+                $fileType = $_FILES['file']['type'];
+
+                $tmp = explode('.', $fileName);
+                $fileExt = strtolower(end($tmp));
+
+                $productName =  strtolower(explode('.', $fileName)[0]);
+                $allowed = array('jpg', 'jpeg', 'png');
+
+                if (in_array($fileExt, $allowed)) {
+                    if ($fileError === 0) {
+                        if ($fileSize < 9000000) {
+
+                            $fileNameNew = time() . '.' . $fileExt;
+                            $fileDestination = 'uploads/' . $fileNameNew;
+                            move_uploaded_file($fileTmpName, $fileDestination);
+                            $img = $fileDestination;
+                        
+                        } else {
+                            $err = 'File is too big!';
+                        }
+                    } else {
+                        $err = 'There was an error uploading the file!';
+                    }
+                } else {
+                    $err = 'Wrong file type!';
+                }
+            } else {
+                $img = $_POST['image'];
+            }
+        if (empty($_POST['title']) || empty($_POST['description']) || empty($_POST['price'])) {
+            $err = 'All fields are required!';
         } else {
-            $err = 'Wrong file type!';
+            $stmt = $conn->prepare('UPDATE products SET title=:title, description=:description, price=:price, img=:img WHERE id=:id');
+            $stmt->execute([
+                ':title' =>$_POST['title'],
+                ':description' =>$_POST['description'],
+                ':price' =>$_POST['price'],
+                ':img'=>$img,
+                ':id'=>$_POST['productId']
+            ]);
+            header('Location: products.php');
+            exit;
         }
-    } elseif (empty($_POST['title']) || empty($_POST['description']) || empty($_POST['price']) ||  empty($_POST['file'])) {
-        $err = 'All fields are required!';
     }
 }
 ?>
@@ -49,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= translate('Document')?></title>
+    <title><?= translate('Document') ?></title>
     <style>
         .error {
             color: #FF0000;
@@ -66,18 +142,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
     <h1 class="center"><?= translate('Add/Edit product') ?></h1>
     <form class="center" action="product.php" method="post" enctype="multipart/form-data">
-        <input class="mywidth" type="text" name="title" placeholder="<?= translate('Title')?>">
+        <input type="hidden" name="productId" value="<?= $id ?>">
+        <input class="mywidth" type="text" name="title" placeholder="<?= translate('Title') ?>" value="<?= $title ?>">
         <br>
-        <input class="mywidth" type="text" name="description" placeholder="<?= translate('Description')?>">
+        <input class="mywidth" type="text" name="description" placeholder="<?= translate('Description') ?>" value="<?= $description ?>">
         <br>
-        <input class="mywidth" type="number" step="0.001" name="price" placeholder="<?= translate('Price')?>">
+        <input class="mywidth" type="number" step="0.001" name="price" placeholder="<?= translate('Price') ?>" value="<?= $price ?>">
         <br>
-        <input type="file" name="file" >
-        <input type="submit" value="Save" name="save">
+        <input type="hidden" name="image" value="<?= $img ?>">
+        <input type="file" name="file">
+        <button><?= translate('Save') ?></button>
         <br>
-        <span class="error"><?php echo $err;?></span>
+        <span class="error"><?= $err ?></span>
     </form>
-    <br>
-    
 </body>
 </html>
