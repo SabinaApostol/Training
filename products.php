@@ -6,8 +6,7 @@ $products = prepareAndFetchAll($conn);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (! empty($_POST['idDelete'])) {
-        $stmt = $conn->prepare('DELETE FROM products WHERE id = ?');
-        $stmt->bindValue(1, $_POST['idDelete'], PDO::PARAM_INT);
+        $stmt = $conn->prepare('DELETE FROM products WHERE id = ' . $_POST['idDelete']);
         $stmt->execute();
         header('Location: products.php');
         exit;

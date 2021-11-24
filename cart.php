@@ -8,8 +8,7 @@ $name = $contact = $comment = '';
 if (! empty($_SESSION['ids'])) {
     $idValues = createArrayToBind($_SESSION['ids']);
     $stmt = $conn->prepare('SELECT * FROM products WHERE id IN(' . $idValues . ')');
-    $stmt = bindArrayValues($_SESSION['ids'], $stmt);
-    $products = execAndFetch($stmt);
+    $products = execAndFetch($stmt, array_values($_SESSION['ids']));
 
 } else {
     $products = [];
@@ -39,26 +38,51 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
           $err = 'Please correctly complete the required fields!';
         } elseif (! empty($_SESSION['ids'])) {
             $to = SMEMAIL;
-
             $subject = 'New order';
-            $header  = 'MIME-Version: 1.0' . "\r\n";
-            $header .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-            $header .= 'From: '. $email . "\r\n" . 'Reply-To: ' . $email . "\r\n" .  'X-Mailer: PHP/' . phpversion();;
 
-            $message = '<html><body>';
-            $message .= $name . ' wtih the email ' . $email . ' wants the following products: ' . "\r\n";
+            $headers = 'From: ' . $email . " <" . $email . ">"; 
+  
+            $semi_rand = md5(time());  
+            $mime_boundary = "==Multipart_Boundary_x{$semi_rand}x";  
+
+            $headers .= "\nMIME-Version: 1.0\n" . "Content-Type: multipart/mixed;\n" . " boundary=\"{$mime_boundary}\""; 
+
+            $message = "--{$mime_boundary}\n" ;
+            
+            $message .= $_POST['name'] . ' with the email ' . $_POST['email'] . ' wants the following products:' . "\n";
+
+            
             foreach ($products as $product) {
-                $message .= '<img src="' . $product->img . '"> - ' .$product->id . ' - ' . $product->title;
-                $message .=' - ' . $product->description . ' - ' . $product->price . "\r\n";
-            }
-            $message .= '</body></html>';
-
-            if ($comment !== '') {
-                $message .= 'Comments: ' . $comment . "\r\n";
+                $message .= $product->title . ' - ' . $product->description . ' - ' .  $product->price . "\n";
             }
 
-            $retval = mail($to, $subject, $message, $header);
+            if (! empty($_POST['comment'])) {
+                $message .= $_POST['comment'] . "\n";
+            }
 
+            foreach ($products as $product) {
+                $file = $product->img;
+                if(!empty($file) > 0){ 
+                    if(is_file($file)){ 
+                        $message .= "--{$mime_boundary}\n"; 
+                        $fp =    fopen($file,"rb"); 
+                        $data =  fread($fp,filesize($file)); 
+                
+                        fclose($fp); 
+                        $data = chunk_split(base64_encode($data)); 
+                        $message .= "Content-Type: application/octet-stream; name=\"".basename($file)."\"\n" .  
+                        "Content-Description: ".basename($file)."\n" . 
+                        "Content-Disposition: attachment;\n" . " filename=\"".basename($file)."\"; size=".filesize($file).";\n" .  
+                        "Content-Transfer-Encoding: base64\n\n" . $data . "\n\n"; 
+                    } 
+                } 
+            }
+            
+            $message .= "--{$mime_boundary}--"; 
+            $returnpath = "-f" . $email; 
+
+            $retval = mail($to, $subject, $message, $headers, $returnpath);
+        
             if( $retval == true ) {
                 unset($_SESSION['ids']);
                 header('Location: index.php');

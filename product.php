@@ -11,8 +11,7 @@ if (! empty($_POST['idEdit'])) {
 }
 
 if ($id != 0) {
-    $stmt = $conn->prepare('SELECT title, description, price, img FROM products WHERE id = ?');
-    $stmt->bindValue(1, $_POST['idEdit']);
+    $stmt = $conn->prepare('SELECT title, description, price, img FROM products WHERE id = ' . $_POST['idEdit']);
     $stmt->execute();
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
     $title = $product['title'];
@@ -49,9 +48,9 @@ if ($id != 0) {
                             'price' => $_POST['price'],
                             'img' => $fileDestination
                         ];
-                        $stmt = $conn->prepare('INSERT INTO products (title, description, price, img) VALUES (?, ?, ?, ?)');
-                        $stmt = bindArrayValues($taValues, $stmt);
-                        $stmt->execute();
+                        $placeHolders = createArrayToBind($taValues);
+                        $stmt = $conn->prepare('INSERT INTO products (title, description, price, img) VALUES (' . $placeHolders . ')');
+                        $stmt->execute(array_values($taValues));
                         header('Location: products.php');
                         exit;
                     } else {
@@ -105,14 +104,15 @@ if ($id != 0) {
         if (empty($_POST['title']) || empty($_POST['description']) || empty($_POST['price'])) {
             $err = 'All fields are required!';
         } else {
-            $stmt = $conn->prepare('UPDATE products SET title=:title, description=:description, price=:price, img=:img WHERE id=:id');
-            $stmt->execute([
-                ':title' =>$_POST['title'],
-                ':description' =>$_POST['description'],
-                ':price' =>$_POST['price'],
-                ':img'=>$img,
-                ':id'=>$_POST['productId']
-            ]);
+            $taValues = [
+                'title' => $_POST['title'],
+                'description' => $_POST['description'],
+                'price' => $_POST['price'],
+                'img' => $img,
+                'id' => $_POST['productId']
+            ];
+            $stmt = $conn->prepare('UPDATE products SET title=?, description=?, price=?, img=? WHERE id=?');
+            $stmt->execute(array_values($taValues));
             header('Location: products.php');
             exit;
         }

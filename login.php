@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <br>
         <button><?= translate('Login') ?></button>
         <br>
-        <span class="error"><?php echo $err;?></span>
+        <span class="error"><?php echo $err ?></span>
     </form>
 </body>
 </html>

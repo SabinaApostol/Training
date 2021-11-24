@@ -12,10 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 if (empty($_SESSION['ids'])) {
     $products = prepareAndFetchAll($conn);
 } else {
-    $idValues = createArrayToBind($_SESSION['ids']);
-    $stmt = $conn->prepare('SELECT * FROM products WHERE id NOT IN( ' . $idValues .' )');
-    $stmt = bindArrayValues($_SESSION['ids'], $stmt);
-    $products = execAndFetch($stmt);
+    $placeHolders = createArrayToBind($_SESSION['ids']);
+    $stmt = $conn->prepare('SELECT * FROM products WHERE id NOT IN( ' . $placeHolders .' )');
+    $products = execAndFetch($stmt, array_values($_SESSION['ids']));
 }
 
 ?>
