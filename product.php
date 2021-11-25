@@ -19,8 +19,10 @@ if ($id != 0) {
     $price = $product['price'];
     $img = $product['img'];
 } elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if ($_POST['productId'] == 0) {
-        if ((is_uploaded_file($_FILES['file']['tmp_name'])) && (! empty($_POST['title'])) && (! empty($_POST['description'])) && (! empty($_POST['price']))) {
+    if ($_POST['productId'] == 0 && ! is_uploaded_file($_FILES['file']['tmp_name']) && empty($_POST['title']) && empty($_POST['description']) && empty($_POST['price'])) {
+        $err = 'All fields are required!';
+    }
+    if (is_uploaded_file($_FILES['file']['tmp_name'])) {
             $file = $_FILES['file'];
             $fileName = $_FILES['file']['name'];
             $fileTmpName = $_FILES['file']['tmp_name'];
@@ -28,93 +30,56 @@ if ($id != 0) {
             $fileError = $_FILES['file']['error'];
             $fileType = $_FILES['file']['type'];
 
-            $tmp = explode('.', $fileName);
-            $fileExt = strtolower(end($tmp));
-
-            $productName = strtolower(explode('.', $fileName)[0]);
-            $allowed = ['jpg', 'jpeg', 'png'];
-
-            if (in_array($fileExt, $allowed)) {
-                if ($fileError === 0) {
-                    if ($fileSize < 9000000) {
-                        $fileNameNew = time() . '.' . $fileExt;
-                        $fileDestination = 'uploads/' . $fileNameNew;
-                        move_uploaded_file($fileTmpName, $fileDestination);
-
-                        $taValues = [
-                            'title' => $_POST['title'],
-                            'description' => $_POST['description'],
-                            'price' => $_POST['price'],
-                            'img' => $fileDestination
-                        ];
-                        $placeHolders = createArrayToBind($taValues);
-                        $stmt = $conn->prepare('INSERT INTO products (title, description, price, img) VALUES (' . $placeHolders . ')');
-                        $stmt->execute(array_values($taValues));
-                        header('Location: products.php');
-                        exit;
-                    } else {
-                        $err = 'File is too big!';
-                    }
-                } else {
-                    $err = 'There was an error uploading the file!';
-                }
-            } else {
-                $err = 'Wrong file type!';
+            if (strtolower(explode('/', mime_content_type($fileTmpName))[0]) != 'image') {
+                $err = 'file is not an image!';
             }
-        } elseif (empty($_POST['title']) || empty($_POST['description']) || empty($_POST['price']) ||  empty($_POST['file'])) {
-            $err = 'All fields are required!';
-        } 
-    } else {
-        if (is_uploaded_file($_FILES['file']['tmp_name'])) {
-                $file = $_FILES['file'];
-                $fileName = $_FILES['file']['name'];
-                $fileTmpName = $_FILES['file']['tmp_name'];
-                $fileSize = $_FILES['file']['size'];
-                $fileError = $_FILES['file']['error'];
-                $fileType = $_FILES['file']['type'];
 
+            if ($fileError !== 0) {
+                $err = 'There was an error uploading the file!';
+            }
+
+            if ($fileSize > 900000) {
+                $err = 'File is too big!';
+            }
+
+            if ($err === '') {
                 $tmp = explode('.', $fileName);
                 $fileExt = strtolower(end($tmp));
-
-                $productName =  strtolower(explode('.', $fileName)[0]);
-                $allowed = array('jpg', 'jpeg', 'png');
-
-                if (in_array($fileExt, $allowed)) {
-                    if ($fileError === 0) {
-                        if ($fileSize < 9000000) {
-
-                            $fileNameNew = time() . '.' . $fileExt;
-                            $fileDestination = 'uploads/' . $fileNameNew;
-                            move_uploaded_file($fileTmpName, $fileDestination);
-                            $img = $fileDestination;
-                        
-                        } else {
-                            $err = 'File is too big!';
-                        }
-                    } else {
-                        $err = 'There was an error uploading the file!';
-                    }
-                } else {
-                    $err = 'Wrong file type!';
-                }
-            } else {
-                $img = $_POST['image'];
+    
+                $productName = strtolower(explode('.', $fileName)[0]);
+                $fileNameNew = time() . '.' . $fileExt;
+                $fileDestination = 'uploads/' . $fileNameNew;
+                move_uploaded_file($fileTmpName, $fileDestination);
+                $img = $fileDestination;
             }
-        if (empty($_POST['title']) || empty($_POST['description']) || empty($_POST['price'])) {
-            $err = 'All fields are required!';
-        } else {
-            $taValues = [
-                'title' => $_POST['title'],
-                'description' => $_POST['description'],
-                'price' => $_POST['price'],
-                'img' => $img,
-                'id' => $_POST['productId']
-            ];
-            $stmt = $conn->prepare('UPDATE products SET title=?, description=?, price=?, img=? WHERE id=?');
-            $stmt->execute(array_values($taValues));
-            header('Location: products.php');
-            exit;
+    }
+    if ($_POST['productId'] == 0 && $err === '') {
+        $taValues = [
+            'title' => $_POST['title'],
+            'description' => $_POST['description'],
+            'price' => $_POST['price'],
+            'img' => $img
+        ];
+        $placeHolders = createArrayToBind($taValues);
+        $stmt = $conn->prepare('INSERT INTO products (title, description, price, img) VALUES (' . $placeHolders . ')');
+        $stmt->execute(array_values($taValues));
+        header('Location: products.php');
+        exit;
+    } elseif ($err === '') {
+        if ($img === '') {
+            $img = $_POST['image'];
         }
+        $taValues = [
+            'title' => $_POST['title'],
+            'description' => $_POST['description'],
+            'price' => $_POST['price'],
+            'img' => $img,
+            'id' => $_POST['productId']
+        ];
+        $stmt = $conn->prepare('UPDATE products SET title=?, description=?, price=?, img=? WHERE id=?');
+        $stmt->execute(array_values($taValues));
+        header('Location: products.php');
+        exit;
     }
 }
 ?>
