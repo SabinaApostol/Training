@@ -18,7 +18,6 @@ if ($id != 0) {
     $description = $product['description'];
     $price = $product['price'];
     $img = $product['img'];
-
 } elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($_POST['productId'] == 0) {
         if ((is_uploaded_file($_FILES['file']['tmp_name'])) && (! empty($_POST['title'])) && (! empty($_POST['description'])) && (! empty($_POST['price']))) {
@@ -33,7 +32,7 @@ if ($id != 0) {
             $fileExt = strtolower(end($tmp));
 
             $productName = strtolower(explode('.', $fileName)[0]);
-            $allowed = array('jpg', 'jpeg', 'png');
+            $allowed = ['jpg', 'jpeg', 'png'];
 
             if (in_array($fileExt, $allowed)) {
                 if ($fileError === 0) {

@@ -10,7 +10,7 @@ if (! isset($_SESSION['ids'])) {
 
 function prepareSelectAll($conn) 
 {
-    return  $conn->prepare('SELECT * FROM products');
+    return $conn->prepare('SELECT * FROM products');
 }
 
 function createArrayToBind ($arr) 

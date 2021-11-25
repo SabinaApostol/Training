@@ -28,60 +28,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $name = test_input($_POST["name"]);
         $email = test_input($_POST["email"]);
 
-        if (empty($_POST['comment'])) {
-            $comment = '';
-          } else {
-            $comment = test_input($_POST['comment']);
-          }
-
         if (! preg_match("/^[a-zA-Z-' ]*$/", $name) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
           $err = 'Please correctly complete the required fields!';
         } elseif (! empty($_SESSION['ids'])) {
             $to = SMEMAIL;
             $subject = 'New order';
-
             $headers = 'From: ' . $email . " <" . $email . ">"; 
-  
-            $semi_rand = md5(time());  
-            $mime_boundary = "==Multipart_Boundary_x{$semi_rand}x";  
+            $headers .= "\nMIME-Version: 1.0\n" . "Content-Type: text/html;\n" ;
 
-            $headers .= "\nMIME-Version: 1.0\n" . "Content-Type: multipart/mixed;\n" . " boundary=\"{$mime_boundary}\""; 
-
-            $message = "--{$mime_boundary}\n" ;
+            ob_start();
+            include 'email.php';
+            $emailContent = ob_get_contents();
+            ob_end_clean();
             
-            $message .= $_POST['name'] . ' with the email ' . $_POST['email'] . ' wants the following products:' . "\n";
-
-            
-            foreach ($products as $product) {
-                $message .= $product->title . ' - ' . $product->description . ' - ' .  $product->price . "\n";
-            }
-
-            if (! empty($_POST['comment'])) {
-                $message .= $_POST['comment'] . "\n";
-            }
-
-            foreach ($products as $product) {
-                $file = $product->img;
-                if(!empty($file) > 0){ 
-                    if(is_file($file)){ 
-                        $message .= "--{$mime_boundary}\n"; 
-                        $fp =    fopen($file,"rb"); 
-                        $data =  fread($fp,filesize($file)); 
-                
-                        fclose($fp); 
-                        $data = chunk_split(base64_encode($data)); 
-                        $message .= "Content-Type: application/octet-stream; name=\"".basename($file)."\"\n" .  
-                        "Content-Description: ".basename($file)."\n" . 
-                        "Content-Disposition: attachment;\n" . " filename=\"".basename($file)."\"; size=".filesize($file).";\n" .  
-                        "Content-Transfer-Encoding: base64\n\n" . $data . "\n\n"; 
-                    } 
-                } 
-            }
-            
-            $message .= "--{$mime_boundary}--"; 
+            $message .= $emailContent;
             $returnpath = "-f" . $email; 
 
-            $retval = mail($to, $subject, $message, $headers, $returnpath);
+            $retval = mail($to, $subject, $emailContent, $headers, $returnpath);
         
             if( $retval == true ) {
                 unset($_SESSION['ids']);
@@ -90,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             } else {
                 echo 'Checkout failed...';
             }
+            
         }
       }
 }
