@@ -4,14 +4,19 @@ $name = $_POST['name'];
 $email = $_POST['email'];
 $comments = '';
 
-if (! empty($_SESSION['ids'])) {
-    $idValues = createArrayToBind($_SESSION['ids']);
-    $stmt = $conn->prepare('SELECT * FROM products WHERE id IN(' . $idValues . ')');
-    $products = execAndFetch($stmt, array_values($_SESSION['ids']));
+$products = $_POST['products'];
+// $products = unserialize($products);
+var_dump($products);
+die;
 
-} else {
-    $products = [];
-}
+// if (! empty($_SESSION['ids'])) {
+//     $idValues = createArrayToBind($_SESSION['ids']);
+//     $stmt = $conn->prepare('SELECT * FROM products WHERE id IN(' . $idValues . ')');
+//     $products = execAndFetch($stmt, array_values($_SESSION['ids']));
+
+// } else {
+//     $products = [];
+// }
 
 if (! empty($_POST['comment'])) {
     $comments = $_POST['comment'];

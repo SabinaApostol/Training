@@ -2,8 +2,19 @@
 
 require_once 'common.php';
 
-$err = '';
-$name = $contact = $comment = '';
+$err = [
+    'Name field is empty'=>false,
+    'Email field is empty'=>false,
+    'Invalid name'=>false,
+    'Invalid email'=>false,
+    'Checkout failed'=>false
+
+];
+$fields = [
+    'name'=>'',
+    'email'=>'',
+    'comment'=>''
+];
 
 if (! empty($_SESSION['ids'])) {
     $idValues = createArrayToBind($_SESSION['ids']);
@@ -22,47 +33,55 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         exit;
     }
 
-    if (empty($_POST['email']) || empty($_POST['name'])) {
-        $err = 'Complete all required fields!';
-    } else {
-        $name = test_input($_POST["name"]);
-        $email = test_input($_POST["email"]);
+    if (empty($_POST['email'])) {
+        $err['Email field is empty'] = true;
+    }
 
-        if (! preg_match("/^[a-zA-Z-' ]*$/", $name) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-          $err = 'Please correctly complete the required fields!';
-        } elseif (! empty($_SESSION['ids'])) {
+    if (empty($_POST['name'])) {
+        $err['Name field is empty'] = true;
+    } 
+    
+    if (! $err['Name field is empty'] && ! $err['Email field is empty']) {
+        $fields['name'] = $_POST['name'];
+        $fields['email'] = $_POST['email'];
+
+        if (! empty($_SESSION['ids'])) {
+
+            $customerDetails = [
+                'name'=>$fields['name'],
+                'email'=>$fields['email']
+            ];
+            
+            $products = serialize($products);
+            $customerDetails = serialize($customerDetails);
+            $date = date('Y-m-d H:i:s');
+            $stmt = $conn->prepare('INSERT INTO orders(creationDate, customerDetails, purchasedProducts) VALUES(\'' . $date . '\',\'' . $customerDetails . '\',\'' . $products . '\')');
+            $stmt->execute();
+
             $to = SMEMAIL;
             $subject = 'New order';
-            $headers = 'From: ' . $email . " <" . $email . ">"; 
+            $headers = 'From: ' . $fields['email'] . ' <' . $fields['email'] . '>'; 
             $headers .= "\nMIME-Version: 1.0\n" . "Content-Type: text/html;\n" ;
 
             ob_start();
             include 'email.php';
             $emailContent = ob_get_contents();
             ob_end_clean();
-            
-            $message .= $emailContent;
-            $returnpath = "-f" . $email; 
+
+            $returnpath = '-f' . $email; 
 
             $retval = mail($to, $subject, $emailContent, $headers, $returnpath);
-        
-            if( $retval == true ) {
+            
+            if ($retval) {
                 unset($_SESSION['ids']);
                 header('Location: index.php');
                 exit;
             } else {
-                echo 'Checkout failed...';
+                $err['Checkout failed'] = true;
             }
-            
+                
         }
       }
-}
-
-function test_input($data) {
-    $data = trim($data);
-    $data = stripslashes($data);
-    $data = htmlspecialchars($data);
-    return $data;
 }
 
 ?>
@@ -125,7 +144,7 @@ function test_input($data) {
                 <td>
                     <form action="cart.php" method="post">
                         <input name="id" value="<?= $product->id ?>" type="hidden">
-                        <button><?= translate('Remove') ?></button> 
+                        <button name="remove"><?= translate('Remove') ?></button> 
                     </form> 
                 </td>
             </tr>
@@ -135,18 +154,27 @@ function test_input($data) {
     <div >
     <form style="text-align: center;" method="post" action="cart.php">  
         <input type="text" name="name" placeholder="<?= translate('Name') ?>" class="mywidth">
-        <span class="error">*</span>
+        <?php if ($err['Name field is empty']) : ?>
+            <br>
+            <span class="error"><?= translate('Name field is empty!') ?></span>
+        <?php endif; ?>
         <br>
         <input type="text" name="email" placeholder="<?= translate('Contact details') ?>" class="mywidth">
-        <span class="error">*</span>
+        <?php if ($err['Email field is empty']) : ?>
+            <br>
+            <span class="error"><?= translate('Email field is empty!') ?></span>
+        <?php endif; ?>
         <br>
         <textarea name="comment" cols="40" rows="10" placeholder="<?= translate('Comments') ?>"></textarea>
         <br>
         <div style="text-align: center;">
             <a  href="index.php"><?= translate('Go to index') ?></a>
+            <input name="products" value="<?= serialize($products) ?>" type="hidden"/>
             <button><?= translate('Checkout') ?></button> 
         </div>
-        <span class="error"><?php echo $err ?></span>
+        <?php if ($err['Checkout failed']) : ?>
+            <span class="error"><?= translate('Checkout failed') ?></span>
+        <?php endif; ?>
     </form>
     </div>
 </body>
