@@ -117,7 +117,9 @@ if ($id != 0) {
         <input type="file" name="file">
         <button><?= translate('Save') ?></button>
         <br>
-        <span class="error"><?= $err ?></span>
+        <?php if ($err !== '') : ?>
+            <span class="error"><?= $err ?></span>
+        <?php endif; ?>
     </form>
 </body>
 </html>

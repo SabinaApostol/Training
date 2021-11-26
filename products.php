@@ -5,13 +5,13 @@ require_once 'common.php';
 $products = prepareAndFetchAll($conn);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (! empty($_POST['idDelete'])) {
+    if (! empty($_POST['delete']) && $_POST['delete'] == 'delete' && ! empty($_POST['idDelete']) ) {
         $stmt = $conn->prepare('DELETE FROM products WHERE id = ' . $_POST['idDelete']);
         $stmt->execute();
         header('Location: products.php');
         exit;
     }
-    if (! empty($_POST['idEdit'])) {
+    if (! empty($_POST['edit']) && $_POST['edit'] == 'edit' && ! empty($_POST['idEdit'])) {
         header('Location: product.php');
         exit;
     }
@@ -71,13 +71,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <td>
                     <form action="product.php" method="post">
                         <input name="idEdit" value="<?= $product->id ?>" type="hidden">
-                        <button><?= translate('Edit') ?></button>
+                        <button name="edit" value="edit"><?= translate('Edit') ?></button>
                     </form> 
                 </td>
                 <td>
                     <form action="products.php" method="post">
                         <input name="idDelete" value="<?= $product->id ?>" type="hidden">
-                        <button><?= translate('Delete') ?></button>
+                        <button name="delete" value="delete"><?= translate('Delete') ?></button>
                     </form> 
                 </td>
             </tr>
