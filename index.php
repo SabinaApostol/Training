@@ -1,7 +1,7 @@
 <?php
 
 require_once 'common.php';
-
+// session_destroy();
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $_SESSION['ids'][] = $_POST['id'];
     $_SESSION['ids'] = array_unique($_SESSION['ids']);
@@ -52,6 +52,7 @@ if (empty($_SESSION['ids'])) {
             <th><?= translate('Title') ?></th>
             <th><?= translate('Description') ?></th>
             <th><?= translate('Price') ?></th>
+            <th><?= translate('Reviews') ?></th>
             <th><?= translate('Add to cart') ?></th>
         </tr>
         <?php foreach ($products as $product) : ?>
@@ -67,6 +68,9 @@ if (empty($_SESSION['ids'])) {
                 </td>
                 <td>
                     <?= $product->price ?>
+                </td>
+                <td>
+                    <a href="review.php?id=<?= $product->id ?>"><?= translate('See reviews') ?></a>
                 </td>
                 <td>
                     <form action="index.php" method="post">

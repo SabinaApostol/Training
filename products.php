@@ -53,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <th><?= translate('Price') ?></th>
             <th><?= translate('Edit product') ?></th>
             <th><?= translate('Delete product') ?></th>
+            <th><?= translate('See reviews') ?></th>
         </tr>
         <?php foreach ($products as $product) : ?>
             <tr> 
@@ -79,6 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <input name="idDelete" value="<?= $product->id ?>" type="hidden">
                         <button name="delete" value="delete"><?= translate('Delete') ?></button>
                     </form> 
+                </td>
+                <td>
+                    <a href="editReview.php?id=<?= $product->id ?>"><?= translate('New reviews') ?></a>
                 </td>
             </tr>
         <?php endforeach; ?>
