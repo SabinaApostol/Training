@@ -4,19 +4,8 @@ $name = $_POST['name'];
 $email = $_POST['email'];
 $comments = '';
 
-$products = $_POST['products'];
-// $products = unserialize($products);
-var_dump($products);
-die;
-
-// if (! empty($_SESSION['ids'])) {
-//     $idValues = createArrayToBind($_SESSION['ids']);
-//     $stmt = $conn->prepare('SELECT * FROM products WHERE id IN(' . $idValues . ')');
-//     $products = execAndFetch($stmt, array_values($_SESSION['ids']));
-
-// } else {
-//     $products = [];
-// }
+global $products;
+$products = unserialize($products);
 
 if (! empty($_POST['comment'])) {
     $comments = $_POST['comment'];
@@ -29,15 +18,15 @@ if (! empty($_POST['comment'])) {
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
+    <title><?= translate('Document') ?></title>
 </head>
 <body>
     <table>
         <tr>
-            <th>Image</th>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Price</th>
+            <th><?= translate('Image') ?></th>
+            <th><?= translate('Title') ?></th>
+            <th><?= translate('Description') ?></th>
+            <th><?= translate('Price') ?></th>
         </tr>
         <?php foreach ($products as $product) : ?>
         <tr>
@@ -53,8 +42,8 @@ if (! empty($_POST['comment'])) {
         <?php endforeach ?>
     </table>
     <br><br>
-    <p>Name: <?= $name ?></p>
-    <p>Email: <?= $email ?></p>
-    <p>Comments: <?= $comments ?></p>
+    <p><?= translate('Name: ') ?><?= $name ?></p>
+    <p><?= translate('Email: ') ?><?= $email ?></p>
+    <p><?= translate('Comments: ') ?><?= $comments ?></p>
 </body>
 </html>

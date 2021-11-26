@@ -6,6 +6,7 @@ $stmt = $conn->prepare("SELECT * FROM orders");
 $stmt->execute();
 $orders = $stmt->fetchALL(PDO::FETCH_CLASS);
 
+$allOrders = [];
 foreach ($orders as $order) {
     $products = unserialize($order->purchasedProducts);
     $sum = 0;

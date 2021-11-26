@@ -27,7 +27,8 @@ if (! empty($_SESSION['ids'])) {
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    if (! empty($_POST['id']) && ($key = array_search($_POST['id'], $_SESSION['ids'])) !== false) {
+
+    if (! empty($_POST['remove']) && $_POST['remove'] == 'remove' && ! empty($_POST['id']) && ($key = array_search($_POST['id'], $_SESSION['ids'])) !== false) {
         unset($_SESSION['ids'][$key]);
         header('Location: cart.php');
         exit;
@@ -55,13 +56,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $products = serialize($products);
             $customerDetails = serialize($customerDetails);
             $date = date('Y-m-d H:i:s');
-            $stmt = $conn->prepare('INSERT INTO orders(creationDate, customerDetails, purchasedProducts) VALUES(\'' . $date . '\',\'' . $customerDetails . '\',\'' . $products . '\')');
-            $stmt->execute();
+            $values = [
+                'date' => $date,
+                'customerDetails' => $customerDetails,
+                'products' => $products
+            ];
+            $placeHolders = createArrayToBind($values);
+            $stmt = $conn->prepare('INSERT INTO orders(creationDate, customerDetails, purchasedProducts) VALUES(' . $placeHolders . ')');
+            $stmt->execute(array_values($values));
 
             $to = SMEMAIL;
             $subject = 'New order';
-            $headers = 'From: ' . $fields['email'] . ' <' . $fields['email'] . '>'; 
-            $headers .= "\nMIME-Version: 1.0\n" . "Content-Type: text/html;\n" ;
+            $headers = [
+                'From: '. $fields['email'],
+                'Content-Type:text/html;charset=UTF-8',
+                'Reply-To: ' . $fields['email']
+            ];
+            $headers = implode("\r\n", $headers);
 
             ob_start();
             include 'email.php';
@@ -144,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <td>
                     <form action="cart.php" method="post">
                         <input name="id" value="<?= $product->id ?>" type="hidden">
-                        <button name="remove"><?= translate('Remove') ?></button> 
+                        <button name="remove" value="remove"><?= translate('Remove') ?></button> 
                     </form> 
                 </td>
             </tr>
@@ -169,11 +180,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <br>
         <div style="text-align: center;">
             <a  href="index.php"><?= translate('Go to index') ?></a>
-            <input name="products" value="<?= serialize($products) ?>" type="hidden"/>
             <button><?= translate('Checkout') ?></button> 
         </div>
         <?php if ($err['Checkout failed']) : ?>
-            <span class="error"><?= translate('Checkout failed') ?></span>
+            <span class="error"><?= translate('Checkout failed!') ?></span>
         <?php endif; ?>
     </form>
     </div>
