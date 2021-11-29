@@ -1,17 +1,3 @@
-<?php
-
-$name = $_POST['name'];
-$email = $_POST['email'];
-$comments = '';
-
-global $products;
-$products = unserialize($products);
-
-if (! empty($_POST['comment'])) {
-    $comments = $_POST['comment'];
-}
-
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,8 +28,8 @@ if (! empty($_POST['comment'])) {
         <?php endforeach ?>
     </table>
     <br><br>
-    <p><?= translate('Name: ') ?><?= $name ?></p>
-    <p><?= translate('Email: ') ?><?= $email ?></p>
-    <p><?= translate('Comments: ') ?><?= $comments ?></p>
+    <p><?= translate('Name: ') ?><?= $_POST['name'] ?></p>
+    <p><?= translate('Email: ') ?><?= $_POST['email'] ?></p>
+    <p><?= translate('Comments: ') ?><?= $_POST['comment'] ?? NULL ?></p>
 </body>
 </html>

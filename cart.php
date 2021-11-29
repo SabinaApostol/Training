@@ -2,97 +2,86 @@
 
 require_once 'common.php';
 
-$err = [
-    'Name field is empty'=>false,
-    'Email field is empty'=>false,
-    'Invalid name'=>false,
-    'Invalid email'=>false,
-    'Checkout failed'=>false
-
-];
-$fields = [
-    'name'=>'',
-    'email'=>'',
-    'comment'=>''
-];
+$err = [];
 
 if (! empty($_SESSION['ids'])) {
     $idValues = createArrayToBind($_SESSION['ids']);
-    $stmt = $conn->prepare('SELECT * FROM products WHERE id IN(' . $idValues . ')');
+    $stmt = $conn->prepare('SELECT * FROM products WHERE id IN (' . $idValues . ')');
     $products = execAndFetch($stmt, array_values($_SESSION['ids']));
 
 } else {
     $products = [];
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-
-
-    if (! empty($_POST['remove']) && $_POST['remove'] == 'remove' && ! empty($_POST['id']) && ($key = array_search($_POST['id'], $_SESSION['ids'])) !== false) {
-        unset($_SESSION['ids'][$key]);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($_POST['remove'] ?? NULL === 'remove') {
+        if (! empty($_POST['id']) && ($key = array_search($_POST['id'], $_SESSION['ids'])) !== false) {
+            unset($_SESSION['ids'][$key]);
+        }
         header('Location: cart.php');
         exit;
     }
 
     if (empty($_POST['email'])) {
-        $err['Email field is empty'] = true;
+        $err['email_empty'] = translate('Email field is empty');
     }
 
     if (empty($_POST['name'])) {
-        $err['Name field is empty'] = true;
+        $err['name_empty'] = translate('Name field is empty');
     } 
     
-    if (! $err['Name field is empty'] && ! $err['Email field is empty']) {
-        $fields['name'] = $_POST['name'];
-        $fields['email'] = $_POST['email'];
-
+    if (empty($err)) {
         if (! empty($_SESSION['ids'])) {
-
             $customerDetails = [
-                'name'=>$fields['name'],
-                'email'=>$fields['email']
+                'name' => $_POST['name'],
+                'email' => $_POST['email']
             ];
             
-            $products = serialize($products);
-            $customerDetails = serialize($customerDetails);
             $date = date('Y-m-d H:i:s');
             $values = [
                 'date' => $date,
-                'customerDetails' => $customerDetails,
-                'products' => $products
+                'name' =>$_POST['name'],
+                'email' => $_POST['email']
             ];
-            $placeHolders = createArrayToBind($values);
-            $stmt = $conn->prepare('INSERT INTO orders(creationDate, customerDetails, purchasedProducts) VALUES(' . $placeHolders . ')');
+            $stmt = $conn->prepare('INSERT INTO orders (date, name, email) VALUES (? , ?, ?)');
             $stmt->execute(array_values($values));
+
+            $stmt = $conn->prepare('SELECT id FROM orders WHERE date = ?');
+            $stmt->execute([$date]);
+            $orderId = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            foreach ($products as $product) {
+                $values = [
+                    'order' => $orderId['id'],
+                    'product' => $product->id
+                ];
+                $stmt = $conn->prepare('INSERT INTO order_details (order_id, product_id) VALUES (?, ?)');
+                $stmt->execute(array_values($values));
+            }
 
             $to = SMEMAIL;
             $subject = 'New order';
             $headers = [
-                'From: '. $fields['email'],
-                'Content-Type:text/html;charset=UTF-8',
-                'Reply-To: ' . $fields['email']
+                'From' => $_POST['email'],
+                'Content-Type' => 'text/html;charset=UTF-8',
+                'Reply-To' => $_POST['email']
             ];
-            $headers = implode("\r\n", $headers);
 
             ob_start();
             include 'email.php';
-            $emailContent = ob_get_contents();
-            ob_end_clean();
+            $emailContent = ob_get_clean(); 
 
-            $returnpath = '-f' . $email; 
-
-            $retval = mail($to, $subject, $emailContent, $headers, $returnpath);
+            $retval = mail($to, $subject, $emailContent, $headers);
             
             if ($retval) {
                 unset($_SESSION['ids']);
                 header('Location: index.php');
                 exit;
             } else {
-                $err['Checkout failed'] = true;
-            }
-                
-        }
-      }
+                $err['checkout_failed'] = translate('Checkout failed');
+            }  
+        }    
+    }
 }
 
 ?>
@@ -165,15 +154,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div >
     <form style="text-align: center;" method="post" action="cart.php">  
         <input type="text" name="name" placeholder="<?= translate('Name') ?>" class="mywidth">
-        <?php if ($err['Name field is empty']) : ?>
+        <?php if (array_key_exists('name_empty', $err)) : ?>
             <br>
-            <span class="error"><?= translate('Name field is empty!') ?></span>
+            <span class="error"><?= $err['name_empty'] ?></span>
         <?php endif; ?>
         <br>
         <input type="text" name="email" placeholder="<?= translate('Contact details') ?>" class="mywidth">
-        <?php if ($err['Email field is empty']) : ?>
+        <?php if (array_key_exists('email_empty', $err)) : ?>
             <br>
-            <span class="error"><?= translate('Email field is empty!') ?></span>
+            <span class="error"><?= $err['email_empty'] ?></span>
         <?php endif; ?>
         <br>
         <textarea name="comment" cols="40" rows="10" placeholder="<?= translate('Comments') ?>"></textarea>
@@ -182,8 +171,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <a  href="index.php"><?= translate('Go to index') ?></a>
             <button><?= translate('Checkout') ?></button> 
         </div>
-        <?php if ($err['Checkout failed']) : ?>
-            <span class="error"><?= translate('Checkout failed!') ?></span>
+        <?php if (array_key_exists('checkout_failed', $err)) : ?>
+            <span class="error"><?= $err['checkout_failed'] ?></span>
         <?php endif; ?>
     </form>
     </div>
