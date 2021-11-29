@@ -8,7 +8,6 @@ if (! empty($_SESSION['ids'])) {
     $idValues = createArrayToBind($_SESSION['ids']);
     $stmt = $conn->prepare('SELECT * FROM products WHERE id IN (' . $idValues . ')');
     $products = execAndFetch($stmt, array_values($_SESSION['ids']));
-
 } else {
     $products = [];
 }
