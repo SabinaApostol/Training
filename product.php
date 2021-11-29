@@ -2,6 +2,11 @@
 
 require_once 'common.php';
 
+if (! $_SESSION['admin']) {
+    echo 'You have to be logged in as an admin to see this page!';
+    die;
+}
+
 $err = $title = $description = $price = $img = '';
 
 if (! empty($_POST['idEdit'])) {

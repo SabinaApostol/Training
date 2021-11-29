@@ -2,6 +2,11 @@
 
 require_once 'common.php';
 
+if (! $_SESSION['admin']) {
+    echo 'You have to be logged in as an admin to see this page!';
+    die;
+}
+
 $products = prepareAndFetchAll($conn);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {

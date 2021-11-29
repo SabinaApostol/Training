@@ -2,6 +2,11 @@
 
 require_once 'common.php';
 
+if (! $_SESSION['admin']) {
+    echo 'You have to be logged in as an admin to see this page!';
+    die;
+}
+
 $stmt = $conn->prepare("SELECT * FROM orders");
 $stmt->execute();
 $orders = $stmt->fetchALL(PDO::FETCH_CLASS);

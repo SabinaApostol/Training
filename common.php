@@ -8,6 +8,10 @@ if (! isset($_SESSION['ids'])) {
     $_SESSION['ids'] = [];
 }
 
+if (! isset($_SESSION['admin'])) {
+    $_SESSION['admin'] = false;
+}
+
 function prepareSelectAll($conn) 
 {
     return $conn->prepare('SELECT * FROM products');
