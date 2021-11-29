@@ -39,8 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $date = date('Y-m-d H:i:s');
             $values = [
                 'date' => $date,
-                'name' =>$_POST['name'],
-                'email' => $_POST['email']
+                'name' => strip_tags($_POST['name']),
+                'email' => strip_tags($_POST['email'])
             ];
             $stmt = $conn->prepare('INSERT INTO orders (date, name, email) VALUES (? , ?, ?)');
             $stmt->execute(array_values($values));

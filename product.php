@@ -18,12 +18,18 @@ if (isset($_GET['id'])) {
 if  ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($_POST['title'])) {
         $err['title'] = translate('You must choose a title!');
+    } else {
+        strip_tags($_POST['title']);
     }
     if (empty($_POST['description'])) {
         $err['description'] = translate('You must add a description to the product!');
+    } else {
+        strip_tags($_POST['description']);
     }
     if (empty($_POST['price'])) {
         $err['price'] = translate('You must give a price!');
+    } else {
+        strip_tags($_POST['price']);
     }
     if (! isset($_GET['id']) && ! is_uploaded_file($_FILES['file']['tmp_name'])) {
         $err['file_upload'] = translate('You must choose a file!');

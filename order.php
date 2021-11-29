@@ -33,7 +33,7 @@ if (! empty($_POST['idOrder'])) {
             border: 1px solid #000000;
             text-align: center;
         }
-        .center{
+        .center {
             margin-left: auto;
             margin-right: auto;
         }

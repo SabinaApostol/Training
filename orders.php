@@ -7,24 +7,13 @@ if (! $_SESSION['admin']) {
     die;
 }
 
-$stmt = $conn->prepare("SELECT * FROM orders");
+$stmt = $conn->prepare('SELECT o.id, o.date, o.name, o.email, ROUND(SUM(p.price), 2) as sum
+                        FROM orders o
+                            JOIN order_details od ON o.id=od.order_id
+                            JOIN old_products p ON od.product_id=p.id
+                            GROUP BY o.date');
 $stmt->execute();
 $orders = $stmt->fetchALL(PDO::FETCH_CLASS);
-$allOrders = [];
-foreach ($orders as $order) {
-    $products = unserialize($order->purchasedProducts);
-    $sum = 0;
-    $customerDetails = unserialize($order->customerDetails);
-    $orderDetails['customerDetails'] = $customerDetails;
-    $orderDetails['date'] = $order->creationDate;
-    foreach ($products as $product) {
-        $sum += $product->price;
-    }
-    $orderDetails['price'] = $sum;
-    
-    $orderDetails['id'] = $order->id;
-    $allOrders[] = $orderDetails; 
-}
 
 ?>
 <!DOCTYPE html>
@@ -39,7 +28,7 @@ foreach ($orders as $order) {
             border: 1px solid #000000;
             text-align: center;
         }
-        .center{
+        .center {
             margin-left: auto;
             margin-right: auto;
         }
@@ -59,24 +48,24 @@ foreach ($orders as $order) {
             <th><?= translate('Price') ?></th>
             <th><?= translate('Details') ?></th>
         </tr>
-        <?php foreach ($allOrders as $order) : ?>
+        <?php foreach ($orders as $order) : ?>
             <tr>
                 <td>
-                    <?= $order['date'] ?>
+                    <?= $order->date ?>
                 </td>
                 <td>
-                    <?= $order['customerDetails']['name'] ?>
+                    <?= $order->name ?>
                 </td>
                 <td>
-                    <?= $order['customerDetails']['email'] ?>
+                    <?= $order->email ?>
                 </td>
                 <td>
-                    <?= $order['price'] ?>
+                    <?= $order->sum ?>
                 </td>
                 <td>
                     <form action="order.php" method="post">
-                        <input name="idOrder" value="<?= $order['id'] ?>" type="hidden">
-                        <button><?= translate('See details') ?></button>
+                        <input name="id" value="<?= $order->id ?>" type="hidden">
+                        <button name='details', value='details'><?= translate('See details') ?></button>
                     </form> 
                 </td>
             </tr>
