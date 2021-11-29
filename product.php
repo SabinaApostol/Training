@@ -7,86 +7,72 @@ if (! $_SESSION['admin']) {
     die;
 }
 
-$err = $title = $description = $price = $img = '';
+$err = [];
 
-if (! empty($_POST['idEdit'])) {
-    $id = $_POST['idEdit'];
-} else {
-    $id = 0;
-}
-
-if ($id != 0) {
-    $stmt = $conn->prepare('SELECT title, description, price, img FROM products WHERE id = ' . $_POST['idEdit']);
-    $stmt->execute();
+if (isset($_GET['id'])) {
+    $stmt = $conn->prepare('SELECT title, description, price, img FROM products WHERE id = ?');
+    $stmt->execute([$_GET['id']]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
-    $title = $product['title'];
-    $description = $product['description'];
-    $price = $product['price'];
-    $img = $product['img'];
-} elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if ($_POST['productId'] == 0 && ! is_uploaded_file($_FILES['file']['tmp_name']) && empty($_POST['title']) && empty($_POST['description']) && empty($_POST['price'])) {
-        $err = 'All fields are required!';
+}
+
+if  ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (empty($_POST['title'])) {
+        $err['title'] = translate('You must choose a title!');
     }
-    if (is_uploaded_file($_FILES['file']['tmp_name'])) {
-            $file = $_FILES['file'];
-            $fileName = $_FILES['file']['name'];
-            $fileTmpName = $_FILES['file']['tmp_name'];
-            $fileSize = $_FILES['file']['size'];
-            $fileError = $_FILES['file']['error'];
-            $fileType = $_FILES['file']['type'];
-
-            if (strtolower(explode('/', mime_content_type($fileTmpName))[0]) != 'image') {
-                $err = 'file is not an image!';
+    if (empty($_POST['description'])) {
+        $err['description'] = translate('You must add a description to the product!');
+    }
+    if (empty($_POST['price'])) {
+        $err['price'] = translate('You must give a price!');
+    }
+    if (! isset($_GET['id']) && ! is_uploaded_file($_FILES['file']['tmp_name'])) {
+        $err['file_upload'] = translate('You must choose a file!');
+    }
+    if (empty($err)) {
+        $values = [
+            'title' => strip_tags($_POST['title']),
+            'description' => strip_tags($_POST['description']),
+            'price' => strip_tags($_POST['price'])
+        ];
+        if (is_uploaded_file($_FILES['file']['tmp_name'])) {
+            if ($_FILES['file']['error'] !== 0) {
+                $err['error_upload'] = 'There was an error uploading the file!';
+            }
+            if (strtolower(explode('/', mime_content_type($_FILES['file']['tmp_name']))[0]) != 'image') {
+                $err['not_image'] = translate('File is not an image!');
             }
 
-            if ($fileError !== 0) {
-                $err = 'There was an error uploading the file!';
-            }
-
-            if ($fileSize > 900000) {
-                $err = 'File is too big!';
-            }
-
-            if ($err === '') {
-                $tmp = explode('.', $fileName);
+            if (empty($err)) {
+                $tmp = explode('.', $_FILES['file']['name']);
                 $fileExt = strtolower(end($tmp));
-    
-                $productName = strtolower(explode('.', $fileName)[0]);
+        
+                $productName = strtolower($tmp[0]);
                 $fileNameNew = time() . '.' . $fileExt;
-                $fileDestination = 'uploads/' . $fileNameNew;
-                move_uploaded_file($fileTmpName, $fileDestination);
-                $img = $fileDestination;
+                $fileDestination = 'uploads/' . $fileNameNew; 
+                if (move_uploaded_file($_FILES['file']['tmp_name'], $fileDestination)) {
+                    $values['img'] = $fileDestination;
+                } else {
+                    $err['move_upload'] = translate('File couldn\'t be moved!');
+                }
             }
-    }
-    if ($_POST['productId'] == 0 && $err === '') {
-        $taValues = [
-            'title' => $_POST['title'],
-            'description' => $_POST['description'],
-            'price' => $_POST['price'],
-            'img' => $img
-        ];
-        $placeHolders = createArrayToBind($taValues);
-        $stmt = $conn->prepare('INSERT INTO products (title, description, price, img) VALUES (' . $placeHolders . ')');
-        $stmt->execute(array_values($taValues));
-        header('Location: products.php');
-        exit;
-    } elseif ($err === '') {
-        if ($img === '') {
-            $img = $_POST['image'];
+        } elseif (isset($_GET['id'])) {
+            $values['img'] = $product['img'];
         }
-        $taValues = [
-            'title' => $_POST['title'],
-            'description' => $_POST['description'],
-            'price' => $_POST['price'],
-            'img' => $img,
-            'id' => $_POST['productId']
-        ];
-        $stmt = $conn->prepare('UPDATE products SET title=?, description=?, price=?, img=? WHERE id=?');
-        $stmt->execute(array_values($taValues));
-        header('Location: products.php');
-        exit;
+        if (! isset($_GET['id']) && empty($err)) {
+            $stmt = $conn->prepare('INSERT INTO products (title, description, price, img) VALUES (?, ?, ?, ?)');
+            $stmt->execute(array_values($values));
+            header('Location: products.php');
+            exit;
+        } elseif (isset($_GET['id']) && empty($err)) {
+            $values['id'] =  $_POST['productId'];
+            $stmt = $conn->prepare('UPDATE products SET title=?, description=?, price=?, img=? WHERE id=?');
+            $stmt->execute(array_values($values));
+            header('Location: products.php');
+            exit;
+        }
     }
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -110,20 +96,44 @@ if ($id != 0) {
 </head>
 <body>
     <h1 class="center"><?= translate('Add/Edit product') ?></h1>
-    <form class="center" action="product.php" method="post" enctype="multipart/form-data">
-        <input type="hidden" name="productId" value="<?= $id ?>">
-        <input class="mywidth" type="text" name="title" placeholder="<?= translate('Title') ?>" value="<?= $title ?>">
+    <form class="center" action="product.php<?= isset($_GET['id']) ? '?id='.$_GET['id'] : NULL?>" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="productId" value="<?= $_GET['id'] ?? NULL ?>">
+        <input class="mywidth" type="text" name="title" placeholder="<?= translate('Title') ?>" value="<?= $product['title'] ?? ($_POST['title'] ?? NULL) ?>">
+        <?php if (array_key_exists('title', $err)) : ?>
+            <br>
+            <span class="error"><?= $err['title'] ?></span>
+        <?php endif; ?>
         <br>
-        <input class="mywidth" type="text" name="description" placeholder="<?= translate('Description') ?>" value="<?= $description ?>">
+        <input class="mywidth" type="text" name="description" placeholder="<?= translate('Description') ?>" value="<?= $product['description'] ?? ($_POST['description'] ?? NULL) ?>">
+        <?php if (array_key_exists('description', $err)) : ?>
+            <br>
+            <span class="error"><?= $err['description'] ?></span>
+        <?php endif; ?>
         <br>
-        <input class="mywidth" type="number" step="0.001" name="price" placeholder="<?= translate('Price') ?>" value="<?= $price ?>">
+        <input class="mywidth" type="number" step="0.001" name="price" placeholder="<?= translate('Price') ?>" value="<?= $product['price'] ?? ($_POST['price'] ?? NULL) ?>">
+        <?php if (array_key_exists('price', $err)) : ?>
+            <br>
+            <span class="error"><?= $err['price'] ?></span>
+        <?php endif; ?>
         <br>
-        <input type="hidden" name="image" value="<?= $img ?>">
         <input type="file" name="file">
         <button><?= translate('Save') ?></button>
         <br>
-        <?php if ($err !== '') : ?>
-            <span class="error"><?= $err ?></span>
+        <?php if (isset($_GET['id'])) : ?>
+            <p><?= translate('Old image: ') ?></p><img src="<?= $product['img'] ?>" width="30" height="30">
+        <?php endif; ?>
+        <br>
+        <?php if (array_key_exists('file_upload', $err)) : ?>
+            <span class="error"><?= $err['file_upload'] ?></span>
+        <?php endif; ?>
+        <?php if (array_key_exists('not_image', $err)) : ?>
+            <span class="error"><?= $err['not_image'] ?></span>
+        <?php endif; ?>
+        <?php if (array_key_exists('error_upload', $err)) : ?>
+            <span class="error"><?= $err['error_upload'] ?></span>
+        <?php endif; ?>
+        <?php if (array_key_exists('move_upload', $err)) : ?>
+            <span class="error"><?= $err['move_upload'] ?></span>
         <?php endif; ?>
     </form>
 </body>

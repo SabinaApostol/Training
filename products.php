@@ -9,14 +9,14 @@ if (! $_SESSION['admin']) {
 
 $products = prepareAndFetchAll($conn);
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (! empty($_POST['delete']) && $_POST['delete'] == 'delete' && ! empty($_POST['idDelete']) ) {
-        $stmt = $conn->prepare('DELETE FROM products WHERE id = ' . $_POST['idDelete']);
-        $stmt->execute();
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (! empty($_POST['delete']) && $_POST['delete'] === 'delete' && ! empty($_POST['id']) ) {
+        $stmt = $conn->prepare('DELETE FROM products WHERE id = ?');
+        var_dump($stmt->execute([$_POST['id']]));
         header('Location: products.php');
         exit;
     }
-    if (! empty($_POST['edit']) && $_POST['edit'] == 'edit' && ! empty($_POST['idEdit'])) {
+    if (! empty($_POST['edit']) && $_POST['edit'] === 'edit' && ! empty($_POST['idEdit'])) {
         header('Location: product.php');
         exit;
     }
@@ -74,14 +74,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <?= $product->price ?>
                 </td>
                 <td>
-                    <form action="product.php" method="post">
+                   <!--  <form action="product.php" method="post">
                         <input name="idEdit" value="<?= $product->id ?>" type="hidden">
-                        <button name="edit" value="edit"><?= translate('Edit') ?></button>
-                    </form> 
+                        <button name="edit" value="edit"><
+                            ?= translate('Edit') ?></button>
+                    </form>  -->
+                    <a href="product.php?id=<?= $product->id ?>"><?= translate('Edit') ?></a>
                 </td>
                 <td>
                     <form action="products.php" method="post">
-                        <input name="idDelete" value="<?= $product->id ?>" type="hidden">
+                        <input name="id" value="<?= $product->id ?>" type="hidden">
                         <button name="delete" value="delete"><?= translate('Delete') ?></button>
                     </form> 
                 </td>

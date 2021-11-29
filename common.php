@@ -7,7 +7,6 @@ require_once 'config.php';
 if (! isset($_SESSION['ids'])) {
     $_SESSION['ids'] = [];
 }
-
 if (! isset($_SESSION['admin'])) {
     $_SESSION['admin'] = false;
 }
@@ -49,6 +48,7 @@ $smEmail = SMEMAIL;
 
 try {
     $conn = new PDO("mysql:host={$servername};dbname={$dbname}", $username, $password);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     die($e->getMessage());
 }

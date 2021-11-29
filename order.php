@@ -2,10 +2,15 @@
 
 require_once 'common.php';
 
+if (! $_SESSION['admin']) {
+    echo 'You have to be logged in as an admin to see this page!';
+    die;
+}
+
 if (! empty($_POST['idOrder'])) {
 
-    $stmt = $conn->prepare('SELECT * FROM orders WHERE id = ' . $_POST['idOrder']);
-    $stmt->execute();
+    $stmt = $conn->prepare('SELECT * FROM orders WHERE id = ?');
+    $stmt->execute([$_POST['idOrder']]);
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
     
     $products = unserialize($order['purchasedProducts']);
