@@ -51,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $customerDetails = [
                 'name'=>$fields['name'],
                 'email'=>$fields['email']
+                
             ];
             
             $products = serialize($products);
@@ -164,19 +165,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <br><br>
     <div >
     <form style="text-align: center;" method="post" action="cart.php">  
-        <input type="text" name="name" placeholder="<?= translate('Name') ?>" class="mywidth">
+        <input type="text" name="name" placeholder="<?= translate('Name') ?>" class="mywidth" value="<?= $_POST['name'] ?? NULL ?>">
         <?php if ($err['Name field is empty']) : ?>
             <br>
             <span class="error"><?= translate('Name field is empty!') ?></span>
         <?php endif; ?>
         <br>
-        <input type="text" name="email" placeholder="<?= translate('Contact details') ?>" class="mywidth">
+        <input type="text" name="email" placeholder="<?= translate('Contact details') ?>" class="mywidth" value="<?= $_POST['email'] ?? NULL ?>">
         <?php if ($err['Email field is empty']) : ?>
             <br>
             <span class="error"><?= translate('Email field is empty!') ?></span>
         <?php endif; ?>
         <br>
-        <textarea name="comment" cols="40" rows="10" placeholder="<?= translate('Comments') ?>"></textarea>
+        <textarea name="comment" cols="40" rows="10" placeholder="<?= translate('Comments') ?>" value="<?= $_POST['comment'] ?? NULL ?>"></textarea>
         <br>
         <div style="text-align: center;">
             <a  href="index.php"><?= translate('Go to index') ?></a>
