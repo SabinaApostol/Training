@@ -4,11 +4,13 @@ require_once 'common.php';
 
 $reviews = [];
 
+if (isset($_GET['added'])) {
+
+}
+
 if (isset($_GET['id'])) {
-    $id = $_GET['id'];
-    
-    $stmt = $conn->prepare("SELECT * FROM reviews WHERE idProduct = {$_GET['id']} AND approved != 0");
-    $stmt->execute();
+    $stmt = $conn->prepare('SELECT * FROM reviews WHERE product_id = ? AND approved != 0');
+    $stmt->execute([$_GET['id']]);
     $reviews = $stmt->fetchALL(PDO::FETCH_CLASS);
 }
 
@@ -29,7 +31,7 @@ if (isset($_GET['id'])) {
             border: 1px solid #000000;
             text-align: center;
         }
-        .center{
+        .center {
             margin-left: auto;
             margin-right: auto;
         }
@@ -37,7 +39,7 @@ if (isset($_GET['id'])) {
 </head>
 <body>
     <?php if (isset($_GET['id'])) : ?>
-        <a href="addReview.php?id=<?= $id ?>"><?= translate('Add review') ?></a>
+        <a href="addReview.php?id=<?= $_GET['id'] ?>"><p style="text-align: center;"><?= translate('Add review') ?></p></a>
     <?php endif; ?>
     <?php if (! empty($reviews)) :?>
         <h1><?= translate('Reviews') ?></h1>
@@ -61,8 +63,11 @@ if (isset($_GET['id'])) {
                 </tr>
             <?php endforeach; ?>
         </table>
-    <?php else : ?>
+    <?php elseif (! isset($_GET['added'])) : ?>
         <p style="text-align: center;"><?= translate('No reviews on this product yet') ?></p>
+    <?php else : ?>
+        <p style="text-align: center;"><?= translate('Thank you for the review') ?></p>
+        <a href="index.php"><p style="text-align: center;"><?= translate('Go back to see the products') ?></p></a>
     <?php endif; ?>
 </body>
 </html>

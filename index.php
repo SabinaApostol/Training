@@ -70,7 +70,7 @@ if (empty($_SESSION['ids'])) {
                     <?= $product->price ?>
                 </td>
                 <td>
-                    <a href="review.php?id=<?= $product->id ?>"><?= translate('See reviews') ?></a>
+                    <a href="reviews.php?id=<?= $product->id ?>"><?= translate('See reviews') ?></a>
                 </td>
                 <td>
                     <form action="index.php" method="post">

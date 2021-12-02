@@ -2,38 +2,32 @@
 
 require_once 'common.php';
 
-$err = [
-    'Title'=>false,
-    'Description'=>false,
-    'Rating'=>false,
-    'Invalid rating'=>false
-];
+$err = [];
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($_POST['title'])) {
-        $err['Title'] = true;
+        $err['title'] = translate('Title is required!');
     }
     if (empty($_POST['description'])) {
-        $err['Description'] = true;
+        $err['description'] = translate('Description is required!');
     }
 
     if (empty($_POST['rating'])) {
-        $err['Rating'] = true;
-    } elseif ($_POST['rating'] > 5 || $_POST['rating'] < 1) {
-        $err['Invalid rating'] = true;
+        $err['Rating'] = translate('Rating is required!');
+    } elseif (! is_numeric($_POST['rating']) && $_POST['rating'] > 5 || $_POST['rating'] < 1) {
+        $err['invalid_rating'] = translate('Rating is not valid!');
     }
 
-    if ((! $err['Title']) && (! $err['Description']) && (! $err['Rating']) && (! $err['Invalid rating'])) {
-        $taValues = [
-            'idProduct' => $_POST['idProd'],
-            'title' => $_POST['title'],
-            'description' => $_POST['description'],
+    if (empty($err)) {
+        $values = [
+            'product_id' => $_GET['id'],
+            'title' => strip_tags($_POST['title']),
+            'description' => strip_tags($_POST['description']),
             'rating' => $_POST['rating']
         ];
-        $placeHolders = createArrayToBind($taValues);
-        $stmt = $conn->prepare('INSERT INTO reviews (idProduct, title, description, rating, approved) VALUES (' . $placeHolders . ', 0)');
-        $stmt->execute(array_values($taValues));
-        header('Location: index.php');
+        $stmt = $conn->prepare('INSERT INTO reviews (product_id, title, description, rating, approved) VALUES (?, ?, ?, ?, 0)');
+        $stmt->execute(array_values($values));
+        header('Location: reviews.php?added=1');
         exit;
     }
 }
@@ -57,27 +51,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 <body>
     <h1 class="center"><?= translate('Add review') ?></h1>
-    <form class="center" method="post" action="addReview.php">
-        <input type="hidden" name="idProd" value="<?= isset($_POST['idProd']) ? $_POST['idProd'] : $_GET['id'] ?>">
-        <input type="text" name="title" placeholder="<?= translate('Title') ?>" size="40" value="<?= isset($_POST['title']) ? $_POST['title'] : '' ?>">
-        <?php if ($err['Title'] != '') :?>
+    <form class="center" method="post" action="addReview.php?id=<?= $_GET['id'] ?>">
+        <input type="text" name="title" placeholder="<?= translate('Title') ?>" size="40" value="<?= $_POST['title'] ?? NULL ?>">
+        <?php if (isset($err['title'])) :?>
             <br>
-            <span class="error"><?= translate('Title is required') ?></span>
+            <span class="error"><?= $err['title'] ?></span>
         <?php endif; ?>
         <br>
         <textarea name="description" placeholder="<?= translate('Description') ?>" cols="40" rows="10"></textarea>
-        <?php if ($err['Description'] != '') :?>
+        <?php if (isset($err['description'])) :?>
             <br>
-            <span class="error"><?= translate('Description is required') ?></span>
+            <span class="error"><?= $err['description'] ?></span>
         <?php endif; ?>
         <br>
-        <input type="number" step="0.1" name="rating"  max="5.0" min="1.0" placeholder="<?= translate('Rating') ?>" value="<?= isset($_POST['rating']) ? $_POST['rating'] : '' ?>">
-        <?php if ($err['Rating'] != '') :?>
+        <input type="number" step="0.1" name="rating"  max="5.0" min="1.0" placeholder="<?= translate('Rating') ?>" value="<?= $_POST['rating'] ?? NULL ?>">
+        <?php if (isset($err['rating'])) :?>
             <br>
-            <span class="error"><?= translate('Rating is required') ?></span>
+            <span class="error"><?= $err['rating'] ?></span>
         <?php endif; ?>
         <br>
-        <button><?= translate('Add') ?></button>
+        <?php if (isset($err['invalid_rating'])) :?>
+            <br>
+            <span class="error"><?= $err['invalid_rating'] ?></span>
+        <?php endif; ?>
+        <button><?= translate('Add review') ?></button>
         <br>
     </form>
 </body>

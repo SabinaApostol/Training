@@ -3,28 +3,24 @@
 require_once 'common.php';
 
 $reviews = [];
-$id = 0;
 
 if (isset($_GET['id'])) {
-    $id = $_GET['id'];
-} 
-if ($id !=0) {
-    $stmt = $conn->prepare("SELECT * FROM reviews WHERE idProduct = $id AND approved = 0");
-    $stmt->execute();
+    $stmt = $conn->prepare("SELECT * FROM reviews WHERE product_id = ? AND approved = 0");
+    $stmt->execute([$_GET['id']]);
     $reviews = $stmt->fetchALL(PDO::FETCH_CLASS);
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (! empty($_POST['deleteR']) && $_POST['deleteR'] == 'deleteR' && ! empty($_POST['idDeleteR']) ) {
-        $stmt = $conn->prepare("DELETE FROM reviews WHERE id = {$_POST['idDeleteR']}");
-        $stmt->execute();
-        header("Location: editReview.php?id={$_POST['idProdD']}");
+    if (! empty($_POST['delete']) && $_POST['delete'] == 'delete' && ! empty($_POST['id'])) {
+        $stmt = $conn->prepare('DELETE FROM reviews WHERE id = ?');
+        $stmt->execute([$_POST['id']]);
+        header("Location: editReview.php?id={$_GET['id']}");
         exit;
     }
-    if (! empty($_POST['approve']) && $_POST['approve'] == 'approve' && ! empty($_POST['idProdE']) && ! empty($_POST['idApprove'])) {
-        $stmt = $conn->prepare("UPDATE reviews SET approved = 1 WHERE idProduct = {$_POST['idProdE']} AND id = {$_POST['idApprove']}");
-        $stmt->execute();
-        header("Location: editReview.php?id={$_POST['idProdE']}");
+    if (! empty($_POST['approve']) && $_POST['approve'] == 'approve' && ! empty($_POST['id'])) {
+        $stmt = $conn->prepare("UPDATE reviews SET approved = 1 WHERE id = ?");
+        $stmt->execute([$_POST['id']]);
+        header("Location: editReview.php?id={$_GET['id']}");
         exit;
     }
 }
@@ -74,17 +70,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <?= $review->rating ?>
                     </td>
                     <td>
-                        <form action="editReview.php" method="post">
-                            <input type="number" name="idProdE" value="<?= isset($_POST['idProdE']) ? $_POST['idProdE'] : $_GET['id'] ?>">      
-                            <input name="idApprove" value="<?= $review->id ?>" type="hidden">
+                        <form action="editReview.php?id=<?= $_GET['id'] ?>" method="post">
+                            <input name="id" value="<?= $review->id ?>" type="hidden">
                             <button name="approve" value="approve"><?= translate('Approve') ?></button>
                         </form> 
                     </td>
                     <td>
-                        <form action="editReview.php" method="post">
-                            <input type="number" name="idProdD" value="<?= isset($_POST['idProdD']) ? $_POST['idProdD'] : $_GET['id'] ?>">    
-                            <input name="idDeleteR" value="<?= $review->id ?>" type="hidden">
-                            <button name="deleteR" value="deleteR"><?= translate('Delete') ?></button>
+                        <form action="editReview.php?id=<?= $_GET['id'] ?>" method="post">   
+                            <input name="id" value="<?= $review->id ?>" type="hidden">
+                            <button name="delete" value="delete"><?= translate('Delete') ?></button>
                         </form> 
                     </td>
                 </tr>
