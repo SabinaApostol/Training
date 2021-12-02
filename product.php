@@ -67,12 +67,22 @@ if  ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (! isset($_GET['id']) && empty($err)) {
             $stmt = $conn->prepare('INSERT INTO products (title, description, price, img) VALUES (?, ?, ?, ?)');
             $stmt->execute(array_values($values));
+            $stmt = $conn->prepare('INSERT INTO old_products (title, description, price, img) VALUES (?, ?, ?, ?)');
+            $stmt->execute(array_values($values));
             header('Location: products.php');
             exit;
         } elseif (isset($_GET['id']) && empty($err)) {
             $values['id'] =  $_POST['productId'];
             $stmt = $conn->prepare('UPDATE products SET title=?, description=?, price=?, img=? WHERE id=?');
             $stmt->execute(array_values($values));
+            
+            $stmt = $conn->prepare('SELECT * FROM order_details WHERE product_id = ?');
+            $stmt->execute([$_POST['productId']]);
+            $order = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (! $order) {
+                $stmt = $conn->prepare('UPDATE old_products SET title=?, description=?, price=?, img=? WHERE id=?');
+                $stmt->execute(array_values($values));
+            }
             header('Location: products.php');
             exit;
         }

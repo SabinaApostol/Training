@@ -12,7 +12,14 @@ $products = prepareAndFetchAll($conn);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (! empty($_POST['delete']) && $_POST['delete'] === 'delete' && ! empty($_POST['id']) ) {
         $stmt = $conn->prepare('DELETE FROM products WHERE id = ?');
-        var_dump($stmt->execute([$_POST['id']]));
+        $stmt->execute([$_POST['id']]);
+        $stmt = $conn->prepare('SELECT * FROM order_details WHERE product_id = ?');
+        $stmt->execute([$_POST['id']]);
+        $order = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (! $order) {
+            $stmt = $conn->prepare('DELETE FROM old_products WHERE id = ?');
+            $stmt->execute([$_POST['id']]);
+        }
         header('Location: products.php');
         exit;
     }
@@ -38,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border: 1px solid #000000;
             text-align: center;
         }
-        .center{
+        .center {
             margin-left: auto;
             margin-right: auto;
         }
@@ -74,11 +81,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?= $product->price ?>
                 </td>
                 <td>
-                   <!--  <form action="product.php" method="post">
-                        <input name="idEdit" value="<?= $product->id ?>" type="hidden">
-                        <button name="edit" value="edit"><
-                            ?= translate('Edit') ?></button>
-                    </form>  -->
                     <a href="product.php?id=<?= $product->id ?>"><?= translate('Edit') ?></a>
                 </td>
                 <td>

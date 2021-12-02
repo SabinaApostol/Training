@@ -7,15 +7,15 @@ if (! $_SESSION['admin']) {
     die;
 }
 
-if (! empty($_POST['idOrder'])) {
-
-    $stmt = $conn->prepare('SELECT * FROM orders WHERE id = ?');
-    $stmt->execute([$_POST['idOrder']]);
-    $order = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    $products = unserialize($order['purchasedProducts']);
-    $customerDetails = unserialize($order['customerDetails']);
+if (! empty($_POST['details']) && $_POST['details'] === 'details' && ! empty($_POST['id'])) {
+    $stmt = $conn->prepare('SELECT o.id, o.date, o.name, o.email, p.id as product_id, p.title as title, p.description as description, p.price as price, p.img as image 
+                            FROM orders o
+                            JOIN order_details od ON o.id=od.order_id
+                            JOIN old_products p ON od.product_id=p.id AND o.id = ?');
+    $stmt->execute([$_POST['id']]);
+    $orderDetails = $stmt->fetchALL();
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -48,50 +48,43 @@ if (! empty($_POST['idOrder'])) {
 </head>
 <body>
     <h1><?= translate('Order') ?></h1>
-    <p class="center"><?= translate('Checkout information: ') ?></p>
     <table class="center">
         <tr>
             <th><?= translate('Date') ?></th>
             <th><?= translate('Name') ?></th>
             <th><?= translate('Email') ?></th>
-        </tr>
-        <tr>
-            <td>
-                <?= $order['creationDate'] ?>
-            </td>
-            <td>
-                <?= $customerDetails['name'] ?>
-            </td>
-            <td>
-                <?= $customerDetails['email'] ?>
-            </td>
-        </tr>
-    </table>
-    <br>
-    <p class="center"><?= translate('Products: ') ?></p>
-    <table class="center">
-        <tr>
-            <th><?= translate('Image') ?></th>
             <th><?= translate('Title') ?></th>
             <th><?= translate('Description') ?></th>
             <th><?= translate('Price') ?></th>
+            <th><?= translate('Image') ?></th>
         </tr>
-        <?php foreach ($products as $product) : ?>
-            <tr> 
+        <?php foreach ($orderDetails as $order) : ?>
+            <tr>
                 <td>
-                    <img src="<?= $product->img ?>">
+                    <?= $order['date'] ?>
                 </td>
                 <td>
-                    <?= $product->title ?>
+                    <?= $order['name'] ?>
                 </td>
                 <td>
-                    <?= $product->description ?>
+                    <?= $order['email'] ?>
                 </td>
                 <td>
-                    <?= $product->price ?>
+                    <?= $order['title'] ?>
+                </td>
+                <td>
+                    <?= $order['description'] ?>
+                </td>
+                <td>
+                    <?= $order['price'] ?>
+                </td>
+                <td>
+                    <img src="<?= $order['image'] ?>">
                 </td>
             </tr>
         <?php endforeach; ?>
     </table>
+    <br>
+   
 </body>
 </html>

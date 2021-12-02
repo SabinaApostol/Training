@@ -28,8 +28,8 @@
         <?php endforeach ?>
     </table>
     <br><br>
-    <p><?= translate('Name: ') ?><?= $_POST['name'] ?></p>
-    <p><?= translate('Email: ') ?><?= $_POST['email'] ?></p>
-    <p><?= translate('Comments: ') ?><?= $_POST['comment'] ?? NULL ?></p>
+    <p><?= translate('Name: ') ?><?= strip_tags($_POST['name']) ?></p>
+    <p><?= translate('Email: ') ?><?= strip_tags($_POST['email']) ?></p>
+    <p><?= translate('Comments: ') ?><?= strip_tags($_POST['comment']) ?? NULL ?></p>
 </body>
 </html>

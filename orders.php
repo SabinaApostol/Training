@@ -9,9 +9,9 @@ if (! $_SESSION['admin']) {
 
 $stmt = $conn->prepare('SELECT o.id, o.date, o.name, o.email, ROUND(SUM(p.price), 2) as sum
                         FROM orders o
-                            JOIN order_details od ON o.id=od.order_id
-                            JOIN old_products p ON od.product_id=p.id
-                            GROUP BY o.date');
+                        JOIN order_details od ON o.id=od.order_id
+                        JOIN old_products p ON od.product_id=p.id
+                        GROUP BY o.date');
 $stmt->execute();
 $orders = $stmt->fetchALL(PDO::FETCH_CLASS);
 
@@ -65,7 +65,7 @@ $orders = $stmt->fetchALL(PDO::FETCH_CLASS);
                 <td>
                     <form action="order.php" method="post">
                         <input name="id" value="<?= $order->id ?>" type="hidden">
-                        <button name='details', value='details'><?= translate('See details') ?></button>
+                        <button name='details' value='details'><?= translate('See details') ?></button>
                     </form> 
                 </td>
             </tr>

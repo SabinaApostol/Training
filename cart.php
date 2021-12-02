@@ -31,11 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (empty($err)) {
         if (! empty($_SESSION['ids'])) {
-            $customerDetails = [
-                'name' => $_POST['name'],
-                'email' => $_POST['email']
-            ];
-            
             $date = date('Y-m-d H:i:s');
             $values = [
                 'date' => $date,
@@ -61,9 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $to = SMEMAIL;
             $subject = 'New order';
             $headers = [
-                'From' => $_POST['email'],
+                'From' => strip_tags($_POST['email']),
                 'Content-Type' => 'text/html;charset=UTF-8',
-                'Reply-To' => $_POST['email']
+                'Reply-To' => strip_tags($_POST['email'])
             ];
 
             ob_start();
