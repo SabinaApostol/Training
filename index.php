@@ -34,7 +34,7 @@ if (empty($_SESSION['ids'])) {
             border: 1px solid #000000;
             text-align: center;
         }
-        .center{
+        .center {
             margin-left: auto;
             margin-right: auto;
         }

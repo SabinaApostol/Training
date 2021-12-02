@@ -4,10 +4,6 @@ require_once 'common.php';
 
 $reviews = [];
 
-if (isset($_GET['added'])) {
-
-}
-
 if (isset($_GET['id'])) {
     $stmt = $conn->prepare('SELECT * FROM reviews WHERE product_id = ? AND approved != 0');
     $stmt->execute([$_GET['id']]);
